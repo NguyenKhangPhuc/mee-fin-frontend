@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LoaderProvider } from "./context/LoaderContext";
+import { NotificationProvider } from "./context/NotificationContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,21 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <LoaderProvider>
+        <NotificationProvider>
+          <body
+            className={`antialiased min-h-screen bg-[#151312] text-[#e8e1df] flex flex-col xl:flex-row`}
+          >
+            {/* <NavbarServer /> */}
+            <div className="flex-grow flex flex-col min-w-0 pt-18 xl:pt-0 xl:pl-72 transition-all duration-300">
+              {/* <NotificationCard />
+              <Loader /> */}
+              <main className="flex-1 flex flex-col"> {children}</main>
+              {/* <FooterSection /> */}
+            </div>
+          </body>
+        </NotificationProvider>
+      </LoaderProvider>
     </html>
   );
 }
