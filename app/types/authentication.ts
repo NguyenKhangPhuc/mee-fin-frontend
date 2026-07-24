@@ -1,3 +1,12 @@
+export type SafeUser = {
+  id: string;
+  displayName: string | null;
+  email: string;
+  confirmationAt: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+};
+
 export interface LoginDto {
   email: string;
   password: string;
@@ -14,13 +23,13 @@ export type SignupDto = SignUpDto;
 
 export interface LoginResponse {
   accessToken?: string;
-  user?: unknown;
+  user?: SafeUser;
   [key: string]: unknown;
 }
 
 export interface SignupResponse {
   accessToken?: string;
-  user?: unknown;
+  user?: SafeUser;
   [key: string]: unknown;
 }
 
@@ -47,6 +56,6 @@ export interface GithubCallbackParams {
 
 export interface GithubCallbackResponse {
   accessToken?: string;
-  user?: unknown;
+  user?: SafeUser;
   [key: string]: unknown;
 }

@@ -4,8 +4,12 @@ export const designTokens = {
       page: 'bg-neutral-50',
       card: 'bg-white',
       input: 'bg-white',
+      sidebar: 'bg-white',
       buttonPrimary: 'bg-neutral-900 hover:bg-neutral-800',
       buttonSecondary: 'bg-white hover:bg-neutral-50',
+      buttonDanger: 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200',
+      navActive: 'bg-neutral-900 text-white',
+      navInactive: 'text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100',
     },
     text: {
       primary: 'text-neutral-900',
@@ -24,11 +28,13 @@ export const designTokens = {
   shadows: {
     card: 'shadow-xl shadow-neutral-200/60',
     button: 'shadow-sm',
+    sidebar: 'shadow-sm',
   },
   radii: {
     card: 'rounded-2xl',
     input: 'rounded-xl',
     button: 'rounded-xl',
+    navItem: 'rounded-xl',
   },
 } as const;
 
