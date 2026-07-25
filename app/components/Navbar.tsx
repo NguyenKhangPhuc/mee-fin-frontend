@@ -98,7 +98,7 @@ export default function NavBar({ initialUser }: NavbarProps) {
             MEE-FINS
           </span>
           <span className={`text-xs ${designTokens.colors.text.muted}`}>
-            Financial Portal
+            Language Exchange Platform
           </span>
         </div>
       </div>

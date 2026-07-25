@@ -82,20 +82,22 @@ export default function SignUpClient() {
     formState: { errors },
   } = useForm<SignUpDto>();
 
-  const onSignUpSubmit = async (data: SignUpDto) => {
+  const onSignUpSubmit = async (formData: SignUpDto) => {
     setIsLoading(true);
     setServerError(null);
     try {
-      await signupService(data);
+      const { data: signupData, error } = await signupService(formData);
+      if (error || !signupData) {
+        setServerError(
+          error?.response?.data?.message || "Sign up failed. Please try again."
+        );
+        return;
+      }
       alert("Sign up successfully!");
       router.push("/login");
     } catch (err: unknown) {
       console.error("Sign up error:", err);
-      setServerError(
-        err && typeof err === "object" && "message" in err
-          ? String((err as { message: string }).message)
-          : "Sign up failed. Please try again."
-      );
+      setServerError("Sign up failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -105,10 +107,11 @@ export default function SignUpClient() {
     setIsGithubLoading(true);
     setServerError(null);
     try {
-      const response = await githubService();
-      console.log("Github login response:", response);
-      if (response?.url) {
-        window.location.href = response.url;
+      const { data: resData } = await githubService();
+      if (resData?.url) {
+        window.location.href = resData.url;
+      } else {
+        window.location.href = "http://localhost:3001/auth/github";
       }
     } catch (err: unknown) {
       console.error("Github login error:", err);

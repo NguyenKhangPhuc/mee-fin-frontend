@@ -1,13 +1,13 @@
 import { ResponseError } from '@/app/types/error';
 import apiClient from '../index';
-import { LoginDto, LoginResponse } from '@/app/types/authentication';
+import { SlotCreationDto, SlotResponse } from '@/app/types/slot';
 import axios, { AxiosError } from 'axios';
 
-export const loginService = async (
-  data: LoginDto
-): Promise<{ data: LoginResponse | null; error: AxiosError<ResponseError> | null }> => {
+export const createSlot = async (
+  data: SlotCreationDto
+): Promise<{ data: SlotResponse | null; error: AxiosError<ResponseError> | null }> => {
   try {
-    const response = await apiClient.post<LoginResponse>('/auth/login', data);
+    const response = await apiClient.post<SlotResponse>('/slots/create', data);
     return { data: response.data, error: null };
   } catch (error) {
     if (axios.isAxiosError<ResponseError>(error)) {

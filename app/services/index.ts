@@ -5,7 +5,20 @@ import axios, {
 } from 'axios';
 import { EXPIRED_ACCESS_TOKEN } from '../constants/error-code';
 import { ResponseError } from '../types/error';
+import { parseSetCookie } from 'set-cookie-parser';
+import { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies';
 
+
+function normalizeSameSite(
+  value: string | undefined
+): ResponseCookie['sameSite'] {
+  if (!value) return undefined;
+  const lower = value.toLowerCase();
+  if (lower === 'lax' || lower === 'strict' || lower === 'none') {
+    return lower;
+  }
+  return undefined;
+}
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
@@ -22,6 +35,21 @@ export const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+let isRefreshing = false;
+let failedQueue: QueueItem[] = [];
+
+const processQueue = (error: AxiosError | null = null): void => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 
 // Request Interceptor: Forward cookies on server-side calls (Server Components)
 api.interceptors.request.use(async (config) => {
@@ -40,20 +68,6 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
-let isRefreshing = false;
-let failedQueue: QueueItem[] = [];
-
-const processQueue = (error: AxiosError | null = null): void => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
-  });
-  failedQueue = [];
-};
-
 // Response Interceptor for handling 401 and token refreshing
 api.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => response,
@@ -61,7 +75,7 @@ api.interceptors.response.use(
   async (error: AxiosError): Promise<AxiosResponse> => {
     const originalRequest = error.config as CustomAxiosRequestConfig | undefined;
     console.log(error.response?.data);
-    if (!originalRequest || (error.response?.status !== 401 && (error.response?.data as ResponseError).code !== EXPIRED_ACCESS_TOKEN)) {
+    if (!originalRequest || ((error.response?.data as ResponseError | undefined)?.code !== EXPIRED_ACCESS_TOKEN)) {
       return Promise.reject(error);
     }
 
@@ -71,6 +85,9 @@ api.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
+      if (!error.config) {
+        return Promise.reject(error);
+      }
       return Promise.reject(error);
     }
 
@@ -102,9 +119,12 @@ api.interceptors.response.use(
     } finally {
       isRefreshing = false;
     }
+
   },
 );
 
 export default api;
 
 export * from './auth';
+export * from './profile';
+export * from './slots';

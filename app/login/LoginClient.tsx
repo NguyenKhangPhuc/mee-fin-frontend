@@ -123,9 +123,8 @@ export default function LoginClient() {
             Email
           </label>
           <div
-            className={`border ${
-              errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <EmailIcon />
             <input
@@ -153,9 +152,8 @@ export default function LoginClient() {
             Password
           </label>
           <div
-            className={`border ${
-              errors.password ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.password ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <PasswordIcon />
             <input
