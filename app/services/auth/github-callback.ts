@@ -1,13 +1,13 @@
-import { ResponseError } from '@/app/types/error';
 import apiClient from '../index';
 import { GithubCallbackParams, GithubCallbackResponse } from '@/app/types/authentication';
-import axios, { AxiosError } from 'axios';
+import { ResponseError } from '@/app/types/error';
+import axios from 'axios';
 
 export const githubCallbackService = async (
   params?: GithubCallbackParams
 ): Promise<{
   data: GithubCallbackResponse | null;
-  error: AxiosError<ResponseError> | null;
+  error: string | null;
 }> => {
   try {
     const response = await apiClient.get<GithubCallbackResponse>('/auth/github/callback', {
@@ -16,8 +16,8 @@ export const githubCallbackService = async (
     return { data: response.data, error: null };
   } catch (error) {
     if (axios.isAxiosError<ResponseError>(error)) {
-      return { data: null, error };
+      return { data: null, error: error.response?.data?.message ?? "Github callback failed" };
     }
-    return { data: null, error: null };
+    return { data: null, error: "Github callback failed" };
   }
 };

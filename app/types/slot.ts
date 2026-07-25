@@ -4,6 +4,7 @@ export type SlotUncheckedCreateInput = {
     id?: string;
     title: string;
     startTime: Date | string;
+    endTime: Date | string;
     durationMinutes: number;
     status?: SlotStatus;
     provideLanguageId: string;

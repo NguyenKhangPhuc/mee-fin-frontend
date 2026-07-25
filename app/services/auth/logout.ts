@@ -1,19 +1,19 @@
-import { ResponseError } from '@/app/types/error';
 import apiClient from '../index';
 import { LogoutResponse } from '@/app/types/authentication';
-import axios, { AxiosError } from 'axios';
+import { ResponseError } from '@/app/types/error';
+import axios from 'axios';
 
 export const logoutService = async (): Promise<{
   data: LogoutResponse | null;
-  error: AxiosError<ResponseError> | null;
+  error: string | null;
 }> => {
   try {
     const response = await apiClient.post<LogoutResponse>('/auth/logout');
     return { data: response.data, error: null };
   } catch (error) {
     if (axios.isAxiosError<ResponseError>(error)) {
-      return { data: null, error };
+      return { data: null, error: error.response?.data?.message ?? "Failed to logout" };
     }
-    return { data: null, error: null };
+    return { data: null, error: "Failed to logout" };
   }
 };

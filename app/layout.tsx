@@ -6,6 +6,9 @@ import { NotificationProvider } from "./context/NotificationContext";
 import NavbarServer from "./components/NavbarServer";
 import { designTokens } from "./constants/design-tokens";
 
+import NotificationCard from "./components/NotificationCard";
+import Loader from "./components/Loader";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -40,6 +43,8 @@ export default function RootLayout({
             <div className="flex-grow flex flex-col min-w-0 xl:pl-72 transition-all duration-300">
               <main className="flex-1 flex flex-col">{children}</main>
             </div>
+            <NotificationCard />
+            <Loader />
           </body>
         </NotificationProvider>
       </LoaderProvider>

@@ -3,6 +3,7 @@ export type ProfileUncheckedCreateInput = {
     fullName?: string | null;
     email: string;
     avatarUrl?: string | null;
+    publicAvatarUrl?: string | null;
     avatarKey?: string | null;
     companyName?: string | null;
     age?: number | null;
@@ -23,7 +24,6 @@ export interface ProfileUpdationDto {
     programme?: string;
     university?: string;
     degree?: string;
-    companyName?: string;
     facebook: string;
     instagram: string;
     linkedIn: string;
