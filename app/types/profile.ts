@@ -1,3 +1,6 @@
+import { SlotUncheckedCreateInput } from "./slot";
+import { UserLanguageUncheckedCreateInput } from "./user_language";
+
 export type ProfileUncheckedCreateInput = {
     id: string;
     fullName?: string | null;
@@ -16,6 +19,9 @@ export type ProfileUncheckedCreateInput = {
     description?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    userlanguage?: UserLanguageUncheckedCreateInput[]
+    provideSlots?: SlotUncheckedCreateInput[]
+    exchangeSlots?: SlotUncheckedCreateInput[]
 };
 
 export interface ProfileUpdationDto {
