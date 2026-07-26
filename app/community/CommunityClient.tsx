@@ -6,10 +6,15 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
+import { SafeUser } from "@/app/types/authentication";
 import { ProfileUncheckedCreateInput, SlotUncheckedCreateInput } from "@/app/types";
 import { designTokens } from "@/app/constants/design-tokens";
+import { bookUserSlot } from "@/app/services/slots/book-user-slot";
+import { useNotification } from "@/app/context/NotificationContext";
+import { useLoader } from "@/app/context/LoaderContext";
 
 interface CommunityClientProps {
+  currentUser?: SafeUser | null;
   profiles: ProfileUncheckedCreateInput[];
 }
 
@@ -27,14 +32,19 @@ interface CalendarEvent {
   };
 }
 
-export default function CommunityClient({ profiles }: CommunityClientProps) {
+export default function CommunityClient({ currentUser, profiles }: CommunityClientProps) {
+  const { showNotification } = useNotification();
+  const { setIsOpenLoader } = useLoader();
+
+  const [profilesList, setProfilesList] = useState<ProfileUncheckedCreateInput[]>(profiles);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>(
     profiles[0]?.id || ""
   );
+  const [selectedSlotToBook, setSelectedSlotToBook] = useState<SlotUncheckedCreateInput | null>(null);
 
   // Filter profiles based on search query
-  const filteredProfiles = profiles.filter((p) => {
+  const filteredProfiles = profilesList.filter((p) => {
     const q = searchQuery.toLowerCase();
     const name = p.fullName?.toLowerCase() || "";
     const email = p.email?.toLowerCase() || "";
@@ -44,7 +54,7 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
   });
 
   const selectedProfile =
-    profiles.find((p) => p.id === selectedProfileId) || profiles[0] || null;
+    profilesList.find((p) => p.id === selectedProfileId) || profilesList[0] || null;
 
   // Map provided slots of selected user to FullCalendar events
   const getEventsForProfile = (profile: ProfileUncheckedCreateInput | null): CalendarEvent[] => {
@@ -82,8 +92,68 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
 
   const calendarEvents = getEventsForProfile(selectedProfile);
 
+  const handleEventClick = (clickInfo: any) => {
+    const isBooked = clickInfo.event.extendedProps?.isBooked;
+    const slotId = clickInfo.event.id;
+
+    if (isBooked) {
+      showNotification("This slot has already been booked.", "info");
+      return;
+    }
+
+    if (!selectedProfile || !selectedProfile.provideSlots) return;
+
+    const slot = selectedProfile.provideSlots.find((s) => s.id === slotId);
+    if (slot) {
+      setSelectedSlotToBook(slot);
+    }
+  };
+
+  const handleConfirmBook = async () => {
+    if (!selectedSlotToBook) return;
+    if (!currentUser?.id) {
+      showNotification("You must be logged in to book a slot.", "error");
+      return;
+    }
+
+    setIsOpenLoader(true);
+    const { error } = await bookUserSlot({
+      slotId: selectedSlotToBook.id,
+      exchangeUserId: currentUser.id,
+    });
+    setIsOpenLoader(false);
+
+    if (error) {
+      showNotification(error || "Failed to book slot", "error");
+      return;
+    }
+
+    // Update profilesList local state so the slot becomes booked
+    setProfilesList((prevProfiles) =>
+      prevProfiles.map((p) => {
+        if (p.id !== selectedProfile?.id) return p;
+        return {
+          ...p,
+          provideSlots: (p.provideSlots || []).map((s) => {
+            if (s.id === selectedSlotToBook.id) {
+              return {
+                ...s,
+                exchangeUserId: currentUser.id,
+                status: "BOOKED" as any,
+              };
+            }
+            return s;
+          }),
+        };
+      })
+    );
+
+    setSelectedSlotToBook(null);
+    showNotification("Slot booked successfully!", "success");
+  };
+
   return (
-    <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans`}>
+    <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
         
         {/* Header */}
@@ -118,7 +188,7 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
         </div>
 
         {/* Main Content Layout */}
-        {profiles.length === 0 ? (
+        {profilesList.length === 0 ? (
           <div className={`p-12 text-center ${designTokens.colors.bg.card} ${designTokens.radii.card} border ${designTokens.colors.border.default}`}>
             <p className={`text-sm ${designTokens.colors.text.secondary}`}>No community members found.</p>
           </div>
@@ -308,7 +378,7 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
                         Schedule Calendar
                       </h3>
                       <p className={`text-xs ${designTokens.colors.text.muted}`}>
-                        Provided language slots owned by {selectedProfile.fullName || "member"}
+                        Provided language slots owned by {selectedProfile.fullName || "member"} (Click an available slot to book)
                       </p>
                     </div>
 
@@ -336,6 +406,7 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
                         right: "dayGridMonth,timeGridWeek,timeGridDay",
                       }}
                       events={calendarEvents}
+                      eventClick={handleEventClick}
                       height="auto"
                       selectable={false}
                       editable={false}
@@ -350,6 +421,116 @@ export default function CommunityClient({ profiles }: CommunityClientProps) {
         )}
 
       </div>
+
+      {/* Booking Confirmation Modal */}
+      {selectedSlotToBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className={`w-full max-w-md ${designTokens.colors.bg.card} ${designTokens.radii.card} ${designTokens.shadows.card} border ${designTokens.colors.border.default} p-6 sm:p-7 flex flex-col gap-6 select-none animate-in zoom-in-95 duration-200`}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-4">
+              <div className="flex flex-col gap-1">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-sky-600">
+                  SLOT_BOOKING_CONFIRMATION
+                </span>
+                <h3 className={`text-lg sm:text-xl font-bold ${designTokens.colors.text.primary}`}>
+                  Do you want to book this slot?
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedSlotToBook(null)}
+                type="button"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition cursor-pointer shrink-0"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Slot Details Body */}
+            <div className="flex flex-col gap-3.5 bg-neutral-50/80 p-4 rounded-xl border border-neutral-100">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Slot Title</span>
+                <span className={`text-xs font-bold ${designTokens.colors.text.primary} text-right`}>
+                  {selectedSlotToBook.title}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Host Member</span>
+                <span className={`text-xs font-bold ${designTokens.colors.text.primary} text-right`}>
+                  {selectedProfile?.fullName || selectedProfile?.email || "Member"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Start Time</span>
+                <span className={`text-xs font-medium text-neutral-700 text-right`}>
+                  {new Date(selectedSlotToBook.startTime).toLocaleString([], {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>End Time</span>
+                <span className={`text-xs font-medium text-neutral-700 text-right`}>
+                  {new Date(selectedSlotToBook.endTime).toLocaleString([], {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Duration</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-100 text-sky-800">
+                  {selectedSlotToBook.durationMinutes} mins
+                </span>
+              </div>
+
+              {selectedSlotToBook.roomId && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Room ID</span>
+                  <span className="font-mono text-[11px] text-neutral-600 truncate max-w-[180px]">
+                    {selectedSlotToBook.roomId}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSlotToBook(null)}
+                className={`px-4 py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonSecondary} ${designTokens.colors.text.buttonSecondary} border ${designTokens.colors.border.default} ${designTokens.radii.button} hover:bg-neutral-100 transition cursor-pointer`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmBook}
+                className={`px-5 py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer flex items-center gap-1.5`}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Book
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
