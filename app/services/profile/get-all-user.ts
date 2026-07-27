@@ -8,7 +8,7 @@ export const getAllUserProfileWithLanguagesAndSlots = async (): Promise<{
     error: string | null;
 }> => {
     try {
-        const result = await api.get<ProfileUncheckedCreateInput[]>('/profile/languages-and-slots');
+        const result = await api.get<ProfileUncheckedCreateInput[]>('/profile/languages-slots');
         return { data: result.data, error: null };
     } catch (error) {
         if (axios.isAxiosError<ResponseError>(error)) {

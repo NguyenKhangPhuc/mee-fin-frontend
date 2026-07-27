@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState, ChangeEvent } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
-import { SafeUser } from "@/app/types/authentication";
 import { ProfileUpdationDto } from "@/app/types/profile";
 import { SlotCreationDto } from "@/app/types/slot";
+import { SlotStatus } from "@/app/types/enum";
 import { LanguageUncheckedCreateInput, UserLanguageUncheckedCreateInput, SlotUncheckedCreateInput, ProfileUncheckedCreateInput } from "@/app/types";
 import { updateProfile, updateProfileImage } from "@/app/services/profile";
 import { createSlot } from "@/app/services/slots";
+import { deleteUserSlot } from "@/app/services/slots/delete-user-slot";
 import { createUserLanguage } from "@/app/services/user-language";
 import { designTokens } from "@/app/constants/design-tokens";
 import { useNotification } from "@/app/context/NotificationContext";
@@ -26,19 +28,9 @@ interface DateSelectArg {
   allDay: boolean;
 }
 
-interface EventClickArg {
-  event: {
-    id: string;
-    title: string;
-    remove: () => void;
-  };
-}
-
 interface UserDashboardClientProps {
   profile: ProfileUncheckedCreateInput | null;
   allLanguages?: LanguageUncheckedCreateInput[];
-  userLanguages?: UserLanguageUncheckedCreateInput[];
-  userSlots?: SlotUncheckedCreateInput[];
 }
 
 interface CalendarEvent {
@@ -46,6 +38,14 @@ interface CalendarEvent {
   title: string;
   start: string | Date;
   end: string | Date;
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
+  extendedProps: {
+    slot: SlotUncheckedCreateInput;
+    isOwner: boolean;
+    status: SlotStatus;
+  };
 }
 
 interface SlotFormInput {
@@ -56,38 +56,93 @@ interface SlotFormInput {
   durationMinutes: number;
 }
 
-const mapSlotsToEvents = (slots: SlotUncheckedCreateInput[] = []): CalendarEvent[] => {
-  return slots.map((s) => {
-    const startTime = new Date(s.startTime);
-    const endTime = s.endTime
-      ? new Date(s.endTime)
-      : new Date(startTime.getTime() + (s.durationMinutes || 30) * 60000);
-    return {
-      id: s.id || String(Date.now()),
-      title: s.title,
-      start: startTime,
-      end: endTime,
-    };
-  });
-};
-
 export default function UserDashboardClient({
   profile,
   allLanguages = [],
-  userLanguages = [],
-  userSlots = [],
 }: UserDashboardClientProps) {
+  const router = useRouter();
   const { showNotification } = useNotification();
   const { setIsOpenLoader, isOpenLoader } = useLoader();
-
   // State
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [userLangs, setUserLangs] = useState<UserLanguageUncheckedCreateInput[]>(userLanguages);
+  const [userLangs, setUserLangs] = useState<UserLanguageUncheckedCreateInput[]>(
+    profile?.userlanguage || []
+  );
+  const [provideSlots, setProvideSlots] = useState<SlotUncheckedCreateInput[]>(
+    profile?.provideSlots || []
+  );
+  const [exchangeSlots, setExchangeSlots] = useState<SlotUncheckedCreateInput[]>(
+    profile?.exchangeSlots || []
+  );
+
   const [selectedAddLangId, setSelectedAddLangId] = useState<string>("");
   const [selectedProficiency, setSelectedProficiency] = useState<"BEGINNER" | "INTERMEDIATE" | "ADVANCED">("BEGINNER");
-  const [events, setEvents] = useState<CalendarEvent[]>(() => mapSlotsToEvents(userSlots));
   const [selectedDateRange, setSelectedDateRange] = useState<{ start: Date; end: Date } | null>(null);
   const [isSlotModalOpen, setIsSlotModalOpen] = useState<boolean>(false);
+  const [selectedSlotDetail, setSelectedSlotDetail] = useState<{
+    slot: SlotUncheckedCreateInput;
+    isOwner: boolean;
+    status: SlotStatus;
+  } | null>(null);
+
+  // Map provided and exchanged slots to FullCalendar events by status & ownership
+  const getCalendarEvents = (): CalendarEvent[] => {
+    const allSlotsMap = new Map<string, { slot: SlotUncheckedCreateInput; isOwner: boolean }>();
+
+    (provideSlots || []).forEach((s) => {
+      if (s.id) allSlotsMap.set(s.id, { slot: s, isOwner: true });
+    });
+
+    (exchangeSlots || []).forEach((s) => {
+      if (s.id && !allSlotsMap.has(s.id)) {
+        allSlotsMap.set(s.id, { slot: s, isOwner: false });
+      }
+    });
+
+    const events: CalendarEvent[] = [];
+
+    allSlotsMap.forEach(({ slot, isOwner }) => {
+      const startTime = new Date(slot.startTime);
+      const endTime = slot.endTime
+        ? new Date(slot.endTime)
+        : new Date(startTime.getTime() + (slot.durationMinutes || 30) * 60000);
+
+      const status = (slot.status as SlotStatus) || (slot.exchangeUserId ? SlotStatus.BOOKED : SlotStatus.OPEN);
+
+      let backgroundColor = "#10b981"; // GREEN for OPEN
+      let borderColor = "#059669";
+
+      if (status === SlotStatus.BOOKED) {
+        backgroundColor = "#ef4444"; // RED for BOOKED
+        borderColor = "#dc2626";
+      } else if (status === SlotStatus.COMPLETED) {
+        backgroundColor = "#3b82f6"; // BLUE for COMPLETED
+        borderColor = "#2563eb";
+      } else if (status === SlotStatus.CANCELLED) {
+        backgroundColor = "#6b7280"; // GRAY for CANCELLED
+        borderColor = "#4b5563";
+      }
+
+      events.push({
+        id: slot.id || String(Date.now()),
+        title: `${slot.title} (${status})`,
+        start: startTime,
+        end: endTime,
+        backgroundColor,
+        borderColor,
+        textColor: "#ffffff",
+        extendedProps: {
+          slot,
+          isOwner,
+          status,
+        },
+      });
+    });
+
+    return events;
+  };
+
+  const calendarEvents = getCalendarEvents();
 
   // Unadded languages filter
   const unaddedLanguages = allLanguages.filter(
@@ -223,10 +278,50 @@ export default function UserDashboardClient({
     setIsSlotModalOpen(true);
   };
 
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    if (confirm(`Delete slot '${clickInfo.event.title}'?`)) {
-      clickInfo.event.remove();
+  const handleEventClick = (clickInfo: any) => {
+    const slot = clickInfo.event.extendedProps?.slot as SlotUncheckedCreateInput;
+    const isOwner = clickInfo.event.extendedProps?.isOwner as boolean;
+    const status = clickInfo.event.extendedProps?.status as SlotStatus;
+
+    if (slot) {
+      setSelectedSlotDetail({ slot, isOwner, status });
     }
+  };
+
+  const handleDeleteProvidedSlot = async () => {
+    if (!selectedSlotDetail) return;
+    const slotId = selectedSlotDetail.slot.id;
+    if (!slotId) return;
+    console.log(selectedSlotDetail)
+    setIsOpenLoader(true);
+    const { error } = await deleteUserSlot({ slotId });
+    setIsOpenLoader(false);
+
+    if (error) {
+      showNotification(error || "Failed to delete slot.", "error");
+      return;
+    }
+
+    setProvideSlots((prev) => prev.filter((s) => s.id !== slotId));
+    setSelectedSlotDetail(null);
+    showNotification("Slot deleted successfully!", "success");
+  };
+
+  // Check if meeting button is available (5 mins before start until end time)
+  const checkIsMeetingAvailable = (slot: SlotUncheckedCreateInput): boolean => {
+    if (!slot.startTime) return false;
+    const now = new Date().getTime();
+    const startTimeMs = new Date(slot.startTime).getTime();
+    const endTimeMs = slot.endTime
+      ? new Date(slot.endTime).getTime()
+      : startTimeMs + (slot.durationMinutes || 30) * 60000;
+
+    return now >= startTimeMs - 5 * 60 * 1000 && now <= endTimeMs;
+  };
+
+  const handleGoToMeeting = (roomId: string) => {
+    if (!roomId) return;
+    router.push(`/room/${roomId}`);
   };
 
   const onSlotSubmit = async (slotInput: SlotFormInput) => {
@@ -262,15 +357,13 @@ export default function UserDashboardClient({
       return;
     }
 
-    const createdSlot = resData.slot;
-    const newEvent: CalendarEvent = {
-      id: createdSlot?.id || String(Date.now()),
-      title: slotInput.title,
-      start: selectedDateRange.start,
-      end: calculatedEndTime,
+    const createdSlot = resData.slot || {
+      ...slotPayload,
+      id: String(Date.now()),
+      status: SlotStatus.OPEN,
     };
 
-    setEvents((prev) => [...prev, newEvent]);
+    setProvideSlots((prev) => [...prev, createdSlot]);
     setIsSlotModalOpen(false);
     resetSlotForm();
     showNotification("Slot created successfully!", "success");
@@ -287,12 +380,27 @@ export default function UserDashboardClient({
     }
   };
 
+  const getStatusBadgeStyle = (status: SlotStatus) => {
+    switch (status) {
+      case SlotStatus.OPEN:
+        return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case SlotStatus.BOOKED:
+        return "bg-rose-100 text-rose-800 border-rose-200";
+      case SlotStatus.COMPLETED:
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case SlotStatus.CANCELLED:
+        return "bg-neutral-200 text-neutral-800 border-neutral-300";
+      default:
+        return "bg-neutral-100 text-neutral-800 border-neutral-200";
+    }
+  };
+
   const displayAvatar = avatarPreview || profile?.publicAvatarUrl || profile?.avatarUrl;
 
   return (
-    <div className={`min-h-screen p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans`}>
+    <div className={`min-h-screen p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
       <div className="max-w-6xl mx-auto flex flex-col gap-10">
-        
+
         {/* Page Header */}
         <div className="flex flex-col gap-1">
           <h1 className={`text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
@@ -551,7 +659,7 @@ export default function UserDashboardClient({
               <h3 className={`text-sm font-bold uppercase tracking-wider text-neutral-700`}>
                 Add New Language
               </h3>
-              
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-neutral-700">
                   Select Available Language
@@ -598,13 +706,35 @@ export default function UserDashboardClient({
 
         {/* FullCalendar Slots Section */}
         <div className={`p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}>
-          <div className="flex flex-col gap-1 border-b border-neutral-100 pb-4">
-            <h2 className={`text-xl font-bold ${designTokens.colors.text.primary}`}>
-              Manage Slots Calendar
-            </h2>
-            <p className={`text-xs ${designTokens.colors.text.muted}`}>
-              Click or drag on dates/times in the calendar to schedule a new slot
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+            <div>
+              <h2 className={`text-xl font-bold ${designTokens.colors.text.primary}`}>
+                Manage Slots Calendar
+              </h2>
+              <p className={`text-xs ${designTokens.colors.text.muted}`}>
+                Click or drag on dates/times to schedule a new slot. Click existing slots for details & actions.
+              </p>
+            </div>
+
+            {/* Calendar Status Legend */}
+            <div className="flex flex-wrap items-center gap-3.5 text-xs font-medium">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-xs bg-[#10b981]" />
+                <span className="text-neutral-700">OPEN (Green)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-xs bg-[#ef4444]" />
+                <span className="text-neutral-700">BOOKED (Red)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-xs bg-[#3b82f6]" />
+                <span className="text-neutral-700">COMPLETED (Blue)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-xs bg-[#6b7280]" />
+                <span className="text-neutral-700">CANCELLED (Gray)</span>
+              </div>
+            </div>
           </div>
 
           <div className="calendar-container">
@@ -620,7 +750,7 @@ export default function UserDashboardClient({
               selectMirror={true}
               dayMaxEvents={true}
               weekends={true}
-              events={events}
+              events={calendarEvents}
               select={handleDateSelect}
               eventClick={handleEventClick}
               height="auto"
@@ -739,6 +869,162 @@ export default function UserDashboardClient({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Slot Details Modal */}
+      {selectedSlotDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div
+            className={`w-full max-w-md ${designTokens.colors.bg.card} ${designTokens.radii.card} ${designTokens.shadows.card} border ${designTokens.colors.border.default} p-6 sm:p-7 flex flex-col gap-6 select-none animate-in zoom-in-95 duration-200`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                    SLOT_DETAILS
+                  </span>
+                  {/* Status Badge */}
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wide ${getStatusBadgeStyle(
+                      selectedSlotDetail.status
+                    )}`}
+                  >
+                    {selectedSlotDetail.status}
+                  </span>
+                </div>
+                <h3 className={`text-lg sm:text-xl font-bold ${designTokens.colors.text.primary}`}>
+                  {selectedSlotDetail.slot.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedSlotDetail(null)}
+                type="button"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition cursor-pointer shrink-0 font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Read-only Slot Info */}
+            <div className="flex flex-col gap-3.5 bg-neutral-50/80 p-4 rounded-xl border border-neutral-100">
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>My Role</span>
+                <span
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${selectedSlotDetail.isOwner
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-sky-50 text-sky-700 border-sky-200"
+                    }`}
+                >
+                  {selectedSlotDetail.isOwner ? "Host / Owner (Provided)" : "Participant (Exchanged)"}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Slot Status</span>
+                <span
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${getStatusBadgeStyle(
+                    selectedSlotDetail.status
+                  )}`}
+                >
+                  {selectedSlotDetail.status}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Start Time</span>
+                <span className="text-xs font-medium text-neutral-700 text-right">
+                  {new Date(selectedSlotDetail.slot.startTime).toLocaleString([], {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>End Time</span>
+                <span className="text-xs font-medium text-neutral-700 text-right">
+                  {new Date(selectedSlotDetail.slot.endTime).toLocaleString([], {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Duration</span>
+                <span className="text-xs font-bold text-neutral-800">
+                  {selectedSlotDetail.slot.durationMinutes} mins
+                </span>
+              </div>
+
+              {selectedSlotDetail.slot.roomId && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Room ID</span>
+                  <span className="font-mono text-[11px] text-neutral-600 truncate max-w-[180px]">
+                    {selectedSlotDetail.slot.roomId}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons based on SlotStatus */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSlotDetail(null)}
+                className={`px-4 py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonSecondary} ${designTokens.colors.text.buttonSecondary} border ${designTokens.colors.border.default} ${designTokens.radii.button} hover:bg-neutral-100 transition cursor-pointer`}
+              >
+                Close
+              </button>
+
+              {/* Status OPEN -> Delete Button */}
+              {selectedSlotDetail.status === SlotStatus.OPEN && (
+                <button
+                  type="button"
+                  onClick={handleDeleteProvidedSlot}
+                  disabled={isOpenLoader}
+                  className="px-5 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Delete Slot
+                </button>
+              )}
+
+              {/* Status BOOKED -> Go to meeting Button */}
+              {selectedSlotDetail.status === SlotStatus.BOOKED && (
+                <div className="flex flex-col items-end gap-1">
+                  <button
+                    type="button"
+                    disabled={!checkIsMeetingAvailable(selectedSlotDetail.slot)}
+                    onClick={() => handleGoToMeeting(selectedSlotDetail.slot.roomId!)}
+                    className="px-5 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition cursor-pointer disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed flex items-center gap-1.5"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Go to the meeting
+                  </button>
+                  {!checkIsMeetingAvailable(selectedSlotDetail.slot) && (
+                    <span className="text-[10px] text-neutral-400 font-medium">
+                      Available 5 mins before start time
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Status COMPLETED or CANCELLED -> No extra action button */}
+            </div>
           </div>
         </div>
       )}
