@@ -52,7 +52,6 @@ interface SlotFormInput {
   title: string;
   provideLanguageId: string;
   exchangeLanguageId: string;
-  roomId: string;
   durationMinutes: number;
 }
 
@@ -188,7 +187,6 @@ export default function UserDashboardClient({
       title: "Language Exchange Slot",
       provideLanguageId: "",
       exchangeLanguageId: "",
-      roomId: "",
       durationMinutes: 30,
     },
   });
@@ -268,7 +266,6 @@ export default function UserDashboardClient({
       start: selectInfo.start,
       end: selectInfo.end,
     });
-    setSlotValue("roomId", crypto.randomUUID());
     if (provideLanguageOptions.length > 0) {
       setSlotValue("provideLanguageId", provideLanguageOptions[0].id);
     }
@@ -290,9 +287,9 @@ export default function UserDashboardClient({
 
   const handleDeleteProvidedSlot = async () => {
     if (!selectedSlotDetail) return;
+    console.log("This is selectedSlotDetail " + selectedSlotDetail.slot.durationMinutes)
     const slotId = selectedSlotDetail.slot.id;
     if (!slotId) return;
-    console.log(selectedSlotDetail)
     setIsOpenLoader(true);
     const { error } = await deleteUserSlot({ slotId });
     setIsOpenLoader(false);
@@ -319,9 +316,9 @@ export default function UserDashboardClient({
     return now >= startTimeMs - 5 * 60 * 1000 && now <= endTimeMs;
   };
 
-  const handleGoToMeeting = (roomId: string) => {
-    if (!roomId) return;
-    router.push(`/room/${roomId}`);
+  const handleGoToMeeting = (slotId: string) => {
+    if (!slotId) return;
+    router.push(`/room/${slotId}`);
   };
 
   const onSlotSubmit = async (slotInput: SlotFormInput) => {
@@ -345,7 +342,6 @@ export default function UserDashboardClient({
       exchangeLanguageId: slotInput.exchangeLanguageId,
       startTime: selectedDateRange.start,
       endTime: calculatedEndTime,
-      roomId: slotInput.roomId || crypto.randomUUID(),
       durationMinutes: Number(slotInput.durationMinutes),
     };
 
@@ -356,14 +352,8 @@ export default function UserDashboardClient({
       showNotification(error || "Failed to create slot.", "error");
       return;
     }
-
-    const createdSlot = resData.slot || {
-      ...slotPayload,
-      id: String(Date.now()),
-      status: SlotStatus.OPEN,
-    };
-
-    setProvideSlots((prev) => [...prev, createdSlot]);
+    console.log("This is the result data " + resData)
+    setProvideSlots((prev) => [...prev, resData]);
     setIsSlotModalOpen(false);
     resetSlotForm();
     showNotification("Slot created successfully!", "success");
@@ -838,17 +828,22 @@ export default function UserDashboardClient({
               {/* Duration Minutes */}
               <div className="flex flex-col gap-1">
                 <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
-                  Duration (Minutes: 15-60)
+                  Duration (Minutes: 15-30)
                 </label>
                 <input
                   type="number"
                   className={`h-10 px-3 border ${slotErrors.durationMinutes ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
                   {...registerSlot("durationMinutes", {
                     required: "Duration is required",
-                    min: { value: 15, message: "Min 15 minutes" },
-                    max: { value: 60, message: "Max 60 minutes" },
+                    min: { value: 15, message: "Duration must be at least 15 minutes" },
+                    max: { value: 30, message: "Duration must be at most 30 minutes" },
                   })}
                 />
+                {slotErrors.durationMinutes && (
+                  <p className="text-xs text-red-500 font-medium">
+                    {slotErrors.durationMinutes.message}
+                  </p>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -966,11 +961,11 @@ export default function UserDashboardClient({
                 </span>
               </div>
 
-              {selectedSlotDetail.slot.roomId && (
+              {selectedSlotDetail.slot.id && (
                 <div className="flex items-center justify-between gap-2">
                   <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Room ID</span>
                   <span className="font-mono text-[11px] text-neutral-600 truncate max-w-[180px]">
-                    {selectedSlotDetail.slot.roomId}
+                    {selectedSlotDetail.slot.id}
                   </span>
                 </div>
               )}
@@ -1007,7 +1002,7 @@ export default function UserDashboardClient({
                   <button
                     type="button"
                     disabled={!checkIsMeetingAvailable(selectedSlotDetail.slot)}
-                    onClick={() => handleGoToMeeting(selectedSlotDetail.slot.roomId!)}
+                    onClick={() => handleGoToMeeting(selectedSlotDetail.slot.id!)}
                     className="px-5 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition cursor-pointer disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed flex items-center gap-1.5"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

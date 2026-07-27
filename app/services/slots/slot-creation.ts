@@ -1,5 +1,5 @@
 import apiClient from '../index';
-import { SlotCreationDto, SlotResponse } from '@/app/types/slot';
+import { SlotCreationDto, SlotUncheckedCreateInput } from '@/app/types/slot';
 import { ResponseError } from '@/app/types/error';
 import axios from 'axios';
 import { formatErrorString } from '@/app/helpers/error-formatter';
@@ -7,9 +7,9 @@ import { formatErrorString } from '@/app/helpers/error-formatter';
 
 export const createSlot = async (
   data: SlotCreationDto
-): Promise<{ data: SlotResponse | null; error: string | null }> => {
+): Promise<{ data: SlotUncheckedCreateInput | null; error: string | null }> => {
   try {
-    const response = await apiClient.post<SlotResponse>('/slots/create', data);
+    const response = await apiClient.post<SlotUncheckedCreateInput>('/slots/create', data);
     return { data: response.data, error: null };
   } catch (error) {
     if (axios.isAxiosError<ResponseError>(error)) {

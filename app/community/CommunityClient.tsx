@@ -118,7 +118,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
 
     setIsOpenLoader(true);
     const { error } = await bookUserSlot({
-      slotId: selectedSlotToBook.id,
+      slotId: selectedSlotToBook.id!,
       exchangeUserId: currentUser.id,
     });
     setIsOpenLoader(false);
@@ -155,7 +155,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
   return (
     <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
-        
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
           <div>
@@ -194,7 +194,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
+
             {/* Members Directory Column (Left) */}
             <div className="lg:col-span-4 flex flex-col gap-3">
               <span className={`text-xs font-bold uppercase tracking-wider ${designTokens.colors.text.muted} px-1`}>
@@ -212,11 +212,10 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
                       key={p.id}
                       onClick={() => setSelectedProfileId(p.id)}
                       type="button"
-                      className={`w-full text-left p-4 ${designTokens.radii.card} border transition-all flex items-center gap-3.5 cursor-pointer ${
-                        isSelected
-                          ? "bg-sky-50/70 border-sky-500 shadow-sm ring-1 ring-sky-500/20"
-                          : `${designTokens.colors.bg.card} ${designTokens.colors.border.default} hover:bg-neutral-50`
-                      }`}
+                      className={`w-full text-left p-4 ${designTokens.radii.card} border transition-all flex items-center gap-3.5 cursor-pointer ${isSelected
+                        ? "bg-sky-50/70 border-sky-500 shadow-sm ring-1 ring-sky-500/20"
+                        : `${designTokens.colors.bg.card} ${designTokens.colors.border.default} hover:bg-neutral-50`
+                        }`}
                     >
                       {/* Member Avatar */}
                       <div className="relative w-11 h-11 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center border border-neutral-300 shrink-0">
@@ -253,10 +252,10 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
             {/* Selected User Details & Schedule Calendar Column (Right) */}
             {selectedProfile && (
               <div className="lg:col-span-8 flex flex-col gap-6">
-                
+
                 {/* Profile Header Banner Card */}
                 <div className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}>
-                  
+
                   {/* Top Profile Summary */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-6 border-b border-neutral-100">
                     <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center border-2 border-neutral-300 shrink-0 shadow-sm">
@@ -370,7 +369,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
 
                 {/* Member Calendar Schedule Card */}
                 <div className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}>
-                  
+
                   {/* Calendar Header & Legend */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
                     <div>
@@ -498,11 +497,11 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
                 </span>
               </div>
 
-              {selectedSlotToBook.roomId && (
+              {selectedSlotToBook.id && (
                 <div className="flex items-center justify-between gap-2">
                   <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Room ID</span>
                   <span className="font-mono text-[11px] text-neutral-600 truncate max-w-[180px]">
-                    {selectedSlotToBook.roomId}
+                    {selectedSlotToBook.id}
                   </span>
                 </div>
               )}

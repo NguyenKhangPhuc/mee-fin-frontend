@@ -12,7 +12,6 @@ export type SlotUncheckedCreateInput = {
     ownerId: string;
     exchangeUserId?: string | null;
     bookedAt?: Date | string | null;
-    roomId?: string;
     videoRecordUrl?: string | null;
     videoExpiresAt?: Date | string | null;
     createdAt?: Date | string;
@@ -27,12 +26,5 @@ export interface SlotCreationDto {
     exchangeLanguageId: string;
     startTime: Date | string;
     endTime: Date | string;
-    roomId: string;
     durationMinutes: number;
-}
-
-export interface SlotResponse {
-    success: boolean;
-    message?: string;
-    slot?: SlotUncheckedCreateInput;
 }
