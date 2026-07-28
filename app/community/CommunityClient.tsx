@@ -405,6 +405,8 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
                         center: "title",
                         right: "dayGridMonth,timeGridWeek,timeGridDay",
                       }}
+                      slotDuration="00:05:00"
+                      slotLabelInterval="00:30:00"
                       events={calendarEvents}
                       eventClick={handleEventClick}
                       height="auto"

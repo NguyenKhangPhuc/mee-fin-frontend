@@ -7,7 +7,7 @@ export const forceEndMeeting = async ({ slotId }: { slotId: string }):
     Promise<{ error: string | null }> => {
     console.log(slotId)
     try {
-        await api.post('/slots/delete', {
+        await api.post('/slots/end-meeting', {
             id: slotId,
         })
         return { error: null }

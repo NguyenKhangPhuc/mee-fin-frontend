@@ -11,6 +11,7 @@ import { useNotification } from "@/app/context/NotificationContext";
 import { useLoader } from "@/app/context/LoaderContext";
 import { GenerateTokenResponse } from "@/app/services/livekit/generate-token";
 import { getCurrentDBTime } from "@/app/services/slots/get-current-db-time";
+import { DynamicModal } from "@/app/components/DynamicModal";
 
 interface RoomClientProps {
     token: GenerateTokenResponse;
@@ -37,6 +38,7 @@ export default function RoomClient({
     const { showNotification } = useNotification();
     const { setIsOpenLoader, isOpenLoader } = useLoader();
     const [isPanelOpen, setIsPanelOpen] = useState<boolean>(true);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState<boolean>(false);
     const [clockOffset, setClockOffset] = useState(0)
     useEffect(() => {
         async function syncClock() {
@@ -85,7 +87,12 @@ export default function RoomClient({
     const currentLanguage = isFirstHalf ? provideLanguageName : exchangeLanguageName;
     const progressPercent = Math.min(100, Math.max(0, (elapsedMs / totalDurationMs) * 100));
 
-    const handleCancelCall = async () => {
+    const handleCancelCall = () => {
+        setIsCancelModalOpen(true);
+    };
+
+    const handleConfirmCancel = async () => {
+        setIsCancelModalOpen(false);
         setIsOpenLoader(true);
         const { error } = await forceEndMeeting({ slotId });
         setIsOpenLoader(false);
@@ -226,6 +233,18 @@ export default function RoomClient({
                     </button>
                 </div>
             )}
+
+            {/* Cancel Meeting Confirmation Modal */}
+            <DynamicModal
+                isOpen={isCancelModalOpen}
+                onConfirm={handleConfirmCancel}
+                onDismiss={() => setIsCancelModalOpen(false)}
+                title="End Meeting"
+                subTitle="This will kick all users out of the meeting and end it immediately. Are you sure?"
+                confirmLabel="Yes, End It"
+                dismissLabel="No, Stay"
+                isDangerous
+            />
         </div>
     );
 }
