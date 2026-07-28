@@ -727,17 +727,22 @@ export default function UserDashboardClient({
             </div>
           </div>
 
-          <div className="calendar-container">
+          <div className="calendar-container max-h-[600px] overflow-y-auto">
             <FullCalendar
               plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
               initialView="timeGridWeek"
+              slotDuration="00:05:00"
+              allDaySlot={false}
               headerToolbar={{
                 left: "prev,next today",
                 center: "title",
                 right: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
               selectable={true}
-              selectMirror={true}
+              selectMirror={false}
+              editable={false}
+              eventDurationEditable={false}
+              eventStartEditable={false}
               dayMaxEvents={true}
               weekends={true}
               events={calendarEvents}

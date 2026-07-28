@@ -395,10 +395,11 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
                   </div>
 
                   {/* FullCalendar Component */}
-                  <div className="fullcalendar-custom-wrapper">
+                  <div className="fullcalendar-custom-wrapper max-h-[600px] overflow-y-auto">
                     <FullCalendar
                       plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                       initialView="timeGridWeek"
+                      allDaySlot={false}
                       headerToolbar={{
                         left: "prev,next today",
                         center: "title",
