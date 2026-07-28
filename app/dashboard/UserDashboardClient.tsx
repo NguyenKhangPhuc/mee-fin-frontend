@@ -51,6 +51,21 @@ interface UserDashboardClientProps {
   allLanguages?: LanguageUncheckedCreateInput[];
 }
 
+/**
+ * UserDashboardClient
+ *
+ * BEHAVIORAL MECHANISM:
+ * Serves as the main container for user dashboard features. Manages local state
+ * for avatar previews, user languages, provided and exchanged slots, date selections,
+ * and modal visibilities. Employs memoization hooks to ensure sub-components like
+ * SlotCalendar do not re-render unnecessarily.
+ *
+ * PARAMETERS:
+ * - props (UserDashboardClientProps): Contains profile data and allLanguages array.
+ *
+ * RETURNS:
+ * - JSX.Element: The user dashboard layout with profile form, language section, calendar, and modals.
+ */
 export default function UserDashboardClient({
   profile,
   allLanguages = [],
@@ -91,7 +106,6 @@ export default function UserDashboardClient({
       .filter(Boolean) as { id: string; name: string }[];
   }, [userLangs, allLanguages]);
 
-  // CRITICAL PERFORMANCE FIX: Memoize calendarEvents so FullCalendar doesn't destroy and rebuild DOM on every render!
   const calendarEvents = useMemo(
     () => buildCalendarEvents(provideSlots, exchangeSlots),
     [provideSlots, exchangeSlots]
@@ -99,7 +113,20 @@ export default function UserDashboardClient({
 
   const displayAvatar = avatarPreview || profile?.publicAvatarUrl || profile?.avatarUrl;
 
-  // Handlers — memoized with useCallback
+  /**
+   * handleAvatarChange
+   *
+   * BEHAVIORAL MECHANISM:
+   * Generates a temporary local object URL for instant image preview in the UI,
+   * activates the global loader, packages the selected File into a FormData container,
+   * and dispatches it via updateProfileImage. Shows a success or error notification upon resolution.
+   *
+   * PARAMETERS:
+   * - file (File): The image File object selected by the user from the file input picker.
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
   const handleAvatarChange = useCallback(
     async (file: File) => {
       const objectUrl = URL.createObjectURL(file);
@@ -121,6 +148,20 @@ export default function UserDashboardClient({
     [setIsOpenLoader, showNotification]
   );
 
+  /**
+   * onProfileSubmit
+   *
+   * BEHAVIORAL MECHANISM:
+   * Formats the raw profile form inputs into a ProfileUpdationDto structure, triggers the loader,
+   * and sends an asynchronous request to updateProfile. Displays a global notification toast
+   * reflecting the operation status upon completion.
+   *
+   * PARAMETERS:
+   * - formData (ProfileUpdationDto): The validated form field object emitted by ProfileForm.
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
   const onProfileSubmit = useCallback(
     async (formData: ProfileUpdationDto) => {
       if (!profile) return;
@@ -151,6 +192,20 @@ export default function UserDashboardClient({
     [profile, setIsOpenLoader, showNotification]
   );
 
+  /**
+   * handleAddLanguage
+   *
+   * BEHAVIORAL MECHANISM:
+   * Sends an API request to createUserLanguage linking the specified language and proficiency level to the user.
+   * On success, immutably appends the returned record to the userLangs state array so the UI updates without a page reload.
+   *
+   * PARAMETERS:
+   * - langId (string): Unique identifier of the target language to add.
+   * - proficiency ("BEGINNER" | "INTERMEDIATE" | "ADVANCED"): Selected proficiency level string.
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
   const handleAddLanguage = useCallback(
     async (langId: string, proficiency: "BEGINNER" | "INTERMEDIATE" | "ADVANCED") => {
       if (!profile) return;
@@ -173,6 +228,19 @@ export default function UserDashboardClient({
     [profile, setIsOpenLoader, showNotification]
   );
 
+  /**
+   * handleDateSelect
+   *
+   * BEHAVIORAL MECHANISM:
+   * Captures start and end date objects emitted when the user selects or drags across a date range in FullCalendar.
+   * Stores the selected range in selectedDateRange state and opens the CreateSlotModal dialog.
+   *
+   * PARAMETERS:
+   * - selectInfo (DateSelectArg): The date selection event payload emitted by FullCalendar.
+   *
+   * RETURNS:
+   * - void
+   */
   const handleDateSelect = useCallback((selectInfo: DateSelectArg) => {
     setSelectedDateRange({
       start: selectInfo.start,
@@ -181,6 +249,19 @@ export default function UserDashboardClient({
     setIsSlotModalOpen(true);
   }, []);
 
+  /**
+   * handleEventClick
+   *
+   * BEHAVIORAL MECHANISM:
+   * Extracts slot, isOwner, and status properties from the clicked FullCalendar event's extendedProps container.
+   * Populates selectedSlotDetail state with this metadata, causing SlotDetailModal to animate into view.
+   *
+   * PARAMETERS:
+   * - clickInfo (any): The event click payload object emitted by FullCalendar.
+   *
+   * RETURNS:
+   * - void
+   */
   const handleEventClick = useCallback((clickInfo: any) => {
     const slot = clickInfo.event.extendedProps?.slot as SlotUncheckedCreateInput;
     const isOwner = clickInfo.event.extendedProps?.isOwner as boolean;
@@ -191,6 +272,19 @@ export default function UserDashboardClient({
     }
   }, []);
 
+  /**
+   * handleDeleteProvidedSlot
+   *
+   * BEHAVIORAL MECHANISM:
+   * Reads the slot ID from selectedSlotDetail state, triggers loader, and invokes deleteUserSlot service.
+   * Upon API success, filters out the deleted slot ID from provideSlots state and closes the slot detail modal.
+   *
+   * PARAMETERS:
+   * None (accesses selectedSlotDetail state via closure).
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
   const handleDeleteProvidedSlot = useCallback(async () => {
     if (!selectedSlotDetail) return;
     const slotId = selectedSlotDetail.slot.id;
@@ -209,6 +303,18 @@ export default function UserDashboardClient({
     showNotification("Slot deleted successfully!", "success");
   }, [selectedSlotDetail, setIsOpenLoader, showNotification]);
 
+  /**
+   * handleGoToMeeting
+   *
+   * BEHAVIORAL MECHANISM:
+   * Validates the presence of slotId and triggers programmatic navigation to the target meeting room route (/room/[slotId]).
+   *
+   * PARAMETERS:
+   * - slotId (string): The room/slot identifier string.
+   *
+   * RETURNS:
+   * - void
+   */
   const handleGoToMeeting = useCallback(
     (slotId: string) => {
       if (!slotId) return;
@@ -217,6 +323,19 @@ export default function UserDashboardClient({
     [router]
   );
 
+  /**
+   * onSlotSubmit
+   *
+   * BEHAVIORAL MECHANISM:
+   * Validates target provide language selection, computes exact end time using selectedDateRange start time and duration,
+   * and invokes the createSlot service API. On success, appends the newly created slot to provideSlots state and closes the modal.
+   *
+   * PARAMETERS:
+   * - slotInput (SlotFormInput): Validated slot creation form inputs emitted by CreateSlotModal.
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
   const onSlotSubmit = useCallback(
     async (slotInput: SlotFormInput) => {
       if (!profile || !selectedDateRange) return;
@@ -259,10 +378,34 @@ export default function UserDashboardClient({
     [profile, selectedDateRange, setIsOpenLoader, showNotification]
   );
 
+  /**
+   * handleCloseSlotModal
+   *
+   * BEHAVIORAL MECHANISM:
+   * Sets isSlotModalOpen state to false, causing CreateSlotModal to animate out of view.
+   *
+   * PARAMETERS:
+   * None.
+   *
+   * RETURNS:
+   * - void
+   */
   const handleCloseSlotModal = useCallback(() => {
     setIsSlotModalOpen(false);
   }, []);
 
+  /**
+   * handleCloseDetailModal
+   *
+   * BEHAVIORAL MECHANISM:
+   * Resets selectedSlotDetail state to null, causing SlotDetailModal to animate out of view.
+   *
+   * PARAMETERS:
+   * None.
+   *
+   * RETURNS:
+   * - void
+   */
   const handleCloseDetailModal = useCallback(() => {
     setSelectedSlotDetail(null);
   }, []);
