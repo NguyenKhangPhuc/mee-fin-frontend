@@ -1,4 +1,5 @@
 import { SlotStatus } from "./enum";
+import { LanguageUncheckedCreateInput } from "./language";
 
 export type SlotUncheckedCreateInput = {
     id?: string;
@@ -16,6 +17,8 @@ export type SlotUncheckedCreateInput = {
     videoExpiresAt?: Date | string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
+    exchangeLanguage?: LanguageUncheckedCreateInput,
+    provideLanguage?: LanguageUncheckedCreateInput,
 };
 
 export interface SlotCreationDto {

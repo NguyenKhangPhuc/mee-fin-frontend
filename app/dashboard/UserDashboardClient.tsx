@@ -833,14 +833,14 @@ export default function UserDashboardClient({
               {/* Duration Minutes */}
               <div className="flex flex-col gap-1">
                 <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
-                  Duration (Minutes: 15-30)
+                  Duration (Minutes: 5-30)
                 </label>
                 <input
                   type="number"
                   className={`h-10 px-3 border ${slotErrors.durationMinutes ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
                   {...registerSlot("durationMinutes", {
                     required: "Duration is required",
-                    min: { value: 15, message: "Duration must be at least 15 minutes" },
+                    min: { value: 5, message: "Duration must be at least 5 minutes" },
                     max: { value: 30, message: "Duration must be at most 30 minutes" },
                   })}
                 />
