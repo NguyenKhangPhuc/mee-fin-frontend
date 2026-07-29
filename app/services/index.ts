@@ -128,3 +128,5 @@ export default api;
 export * from './auth';
 export * from './profile';
 export * from './slots';
+export * from './collections';
+
