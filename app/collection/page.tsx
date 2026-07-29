@@ -1,8 +1,8 @@
 /**
  * PURPOSE:
  * Server Component page for the /collection route.
- * Fetches user vocabulary collections on the server via getAllUserCollections()
- * and renders the interactive CollectionClient presentation component.
+ * Fetches user vocabulary collections and platform languages on the server,
+ * then renders the interactive CollectionClient presentation component.
  *
  * CONTEXT/PARENT FILE:
  * Route handler for /collection in Next.js App Router.
@@ -12,10 +12,19 @@
  */
 
 import { getAllUserCollections } from "@/app/services/collections";
+import { getAllLanguages } from "@/app/services/language/get-language";
 import CollectionClient from "./CollectionClient";
 
 export default async function CollectionPage() {
-  const { data: collections } = await getAllUserCollections();
+  const [{ data: collections }, { data: languages }] = await Promise.all([
+    getAllUserCollections(),
+    getAllLanguages(),
+  ]);
 
-  return <CollectionClient initialCollections={collections || []} />;
+  return (
+    <CollectionClient
+      initialCollections={collections || []}
+      allLanguages={languages || []}
+    />
+  );
 }
