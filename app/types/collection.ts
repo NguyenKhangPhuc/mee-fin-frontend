@@ -1,4 +1,5 @@
 import { LanguageUncheckedCreateInput } from "./language"
+import { VocabularyWordUncheckedCreateInput } from "./word"
 
 export type VocabularyCollectionUncheckedCreateInput = {
     id?: string
@@ -9,5 +10,5 @@ export type VocabularyCollectionUncheckedCreateInput = {
     language: LanguageUncheckedCreateInput,
     createdAt?: Date | string
     updatedAt?: Date | string
-    words?: VocabularyCollectionUncheckedCreateInput[]
+    words?: VocabularyWordUncheckedCreateInput[]
 }
