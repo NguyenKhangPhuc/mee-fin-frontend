@@ -2,8 +2,8 @@
  * PURPOSE:
  * Interactive Client Component for the Vocabulary Collections page.
  * Displays user collections in a responsive grid with search, language filtering,
- * date-based sorting, and Edit/Play collection action buttons.
- * Conditionally mounts WordFlashCards when playing a deck and EditCollectionModal when editing.
+ * date-based sorting, Edit collection modal, Create collection modal, and Words Management modal.
+ * Conditionally mounts WordFlashCards when playing a deck.
  *
  * CONTEXT/PARENT FILE:
  * Rendered by app/collection/page.tsx Server Component.
@@ -11,6 +11,7 @@
  * INPUTS / PARAMETERS:
  * - initialCollections (VocabularyCollectionUncheckedCreateInput[], Required): Initial user collection records.
  * - allLanguages (LanguageUncheckedCreateInput[], Optional): Available platform languages.
+ * - currentUser (SafeUser | null, Optional): Authenticated user session.
  */
 
 "use client";
@@ -18,18 +19,24 @@
 import React, { useState, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { VocabularyCollectionUncheckedCreateInput } from "@/app/types/collection";
+import { VocabularyWordUncheckedCreateInput } from "@/app/types/word";
 import { LanguageUncheckedCreateInput } from "@/app/types/language";
+import { SafeUser } from "@/app/types/authentication";
 import { updateCollection, CollectionUpdatePayload } from "@/app/services/collections/update-collection";
+import { createCollection } from "@/app/services/collections/create-collection";
 import { designTokens } from "@/app/constants/design-tokens";
 import { useNotification } from "@/app/context/NotificationContext";
 import { useLoader } from "@/app/context/LoaderContext";
 
 import WordFlashCards from "./components/WordFlashCards";
 import EditCollectionModal from "./components/EditCollectionModal";
+import CreateCollectionModal, { CreateCollectionFormInputs } from "./components/CreateCollectionModal";
+import WordsManagementModal from "./components/WordsManagementModal";
 
 interface CollectionClientProps {
   initialCollections: VocabularyCollectionUncheckedCreateInput[];
   allLanguages?: LanguageUncheckedCreateInput[];
+  currentUser?: SafeUser | null;
 }
 
 type SortOption = "language" | "newest" | "oldest";
@@ -39,6 +46,7 @@ interface CollectionCardProps {
   index: number;
   onPlay: (collection: VocabularyCollectionUncheckedCreateInput) => void;
   onEdit: (collection: VocabularyCollectionUncheckedCreateInput) => void;
+  onManageWords: (collection: VocabularyCollectionUncheckedCreateInput) => void;
 }
 
 /**
@@ -46,13 +54,14 @@ interface CollectionCardProps {
  *
  * BEHAVIORAL MECHANISM:
  * Renders an individual collection card with metadata, word count, language tag,
- * and two action buttons: Edit collection (opens EditCollectionModal) and Play collection (launches Flashcards game).
+ * Edit collection, Play collection, and Words Management action buttons.
  */
 const CollectionCard = memo(function CollectionCard({
   item,
   index,
   onPlay,
   onEdit,
+  onManageWords,
 }: CollectionCardProps) {
   const wordCount = item.words?.length || 0;
   const langName = item.language?.name || "General";
@@ -108,7 +117,7 @@ const CollectionCard = memo(function CollectionCard({
         </div>
 
         {/* Edit and Play Buttons */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={() => onEdit(item)}
@@ -132,6 +141,18 @@ const CollectionCard = memo(function CollectionCard({
             Play
           </button>
         </div>
+
+        {/* Words Management Button */}
+        <button
+          type="button"
+          onClick={() => onManageWords(item)}
+          className="w-full py-2 px-3 text-xs font-semibold text-sky-700 bg-sky-50/80 border border-sky-200/80 rounded-lg hover:bg-sky-100/80 transition cursor-pointer flex items-center justify-center gap-1.5"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Words Management
+        </button>
       </div>
     </motion.div>
   );
@@ -141,13 +162,13 @@ const CollectionCard = memo(function CollectionCard({
  * CollectionClient
  *
  * BEHAVIORAL MECHANISM:
- * Orchestrates filtering, sorting, editing, and studying of vocabulary collections.
- * Switches to WordFlashCards view when playingCollection state is non-null.
- * Shows EditCollectionModal when editingCollection state is non-null.
+ * Orchestrates filtering, sorting, creating, editing, and studying of vocabulary collections,
+ * as well as managing words within each collection via WordsManagementModal.
  */
 export default function CollectionClient({
   initialCollections = [],
   allLanguages = [],
+  currentUser,
 }: CollectionClientProps) {
   const { showNotification } = useNotification();
   const { setIsOpenLoader, isOpenLoader } = useLoader();
@@ -160,6 +181,8 @@ export default function CollectionClient({
   // Game & Modal state
   const [playingCollection, setPlayingCollection] = useState<VocabularyCollectionUncheckedCreateInput | null>(null);
   const [editingCollection, setEditingCollection] = useState<VocabularyCollectionUncheckedCreateInput | null>(null);
+  const [managingWordsCollection, setManagingWordsCollection] = useState<VocabularyCollectionUncheckedCreateInput | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   // Extract unique available languages for filter dropdown
   const filterLanguages = useMemo(() => {
@@ -229,9 +252,67 @@ export default function CollectionClient({
     setEditingCollection(collection);
   }, []);
 
+  const handleManageWords = useCallback((collection: VocabularyCollectionUncheckedCreateInput) => {
+    setManagingWordsCollection(collection);
+  }, []);
+
   const handleBackToCollections = useCallback(() => {
     setPlayingCollection(null);
   }, []);
+
+  // Update words list in memory when modal modifies words
+  const handleWordsUpdated = useCallback(
+    (collectionId: string, updatedWords: VocabularyWordUncheckedCreateInput[]) => {
+      setCollections((prev) =>
+        prev.map((c) => (c.id === collectionId ? { ...c, words: updatedWords } : c))
+      );
+      setManagingWordsCollection((prev) =>
+        prev && prev.id === collectionId ? { ...prev, words: updatedWords } : prev
+      );
+    },
+    []
+  );
+
+  // Save Create collection handler using createCollection service API
+  const handleSaveCreateCollection = useCallback(
+    async (formData: CreateCollectionFormInputs) => {
+      if (!currentUser?.id) {
+        showNotification("You must be logged in to create a collection.", "error");
+        return;
+      }
+
+      setIsOpenLoader(true);
+      const payload = {
+        ownerId: currentUser.id,
+        name: formData.name,
+        languageId: formData.languageId,
+        description: formData.description,
+      };
+
+      const { data: created, error } = await createCollection(payload);
+      setIsOpenLoader(false);
+
+      if (error || !created) {
+        showNotification(error || "Failed to create collection.", "error");
+        return;
+      }
+
+      const langObj = allLanguages.find((l) => l.id === payload.languageId);
+      const newCollection: VocabularyCollectionUncheckedCreateInput = {
+        ...created,
+        name: payload.name,
+        description: payload.description,
+        languageId: payload.languageId,
+        language: langObj || created.language || { id: payload.languageId, name: "Language" },
+        words: [],
+      };
+
+      setCollections((prev) => [newCollection, ...prev]);
+      setIsCreateModalOpen(false);
+      showNotification("Collection created successfully!", "success");
+    },
+    [currentUser, allLanguages, setIsOpenLoader, showNotification]
+  );
 
   // Save Edit collection handler using updateCollection service API
   const handleSaveEditCollection = useCallback(
@@ -245,7 +326,6 @@ export default function CollectionClient({
         return;
       }
 
-      // Look up language object for state update
       const langObj = allLanguages.find((l) => l.id === payload.languageId);
 
       setCollections((prev) =>
@@ -267,6 +347,11 @@ export default function CollectionClient({
       showNotification("Collection updated successfully!", "success");
     },
     [allLanguages, setIsOpenLoader, showNotification]
+  );
+
+  const availableLangList = useMemo(
+    () => (allLanguages.length > 0 ? allLanguages : filterLanguages.map((l) => ({ id: l.id, name: l.name } as any))),
+    [allLanguages, filterLanguages]
   );
 
   // If a collection is actively being played, show the WordFlashCards view
@@ -318,6 +403,7 @@ export default function CollectionClient({
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => setIsCreateModalOpen(true)}
                 type="button"
                 className={`cursor-pointer px-5 py-2.5 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} transition shadow-sm self-start sm:self-auto`}
               >
@@ -412,6 +498,7 @@ export default function CollectionClient({
                       index={index}
                       onPlay={handlePlayCollection}
                       onEdit={handleEditCollection}
+                      onManageWords={handleManageWords}
                     />
                   ))}
                 </AnimatePresence>
@@ -421,14 +508,31 @@ export default function CollectionClient({
         </motion.div>
       </AnimatePresence>
 
+      {/* Create Collection Modal Dialog */}
+      <CreateCollectionModal
+        isOpen={isCreateModalOpen}
+        allLanguages={availableLangList}
+        isLoading={isOpenLoader}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleSaveCreateCollection}
+      />
+
       {/* Edit Collection Modal Dialog */}
       <EditCollectionModal
         isOpen={Boolean(editingCollection)}
         collection={editingCollection}
-        allLanguages={allLanguages.length > 0 ? allLanguages : filterLanguages.map(l => ({ id: l.id, name: l.name } as any))}
+        allLanguages={availableLangList}
         isLoading={isOpenLoader}
         onClose={() => setEditingCollection(null)}
         onSubmit={handleSaveEditCollection}
+      />
+
+      {/* Words Management Modal Dialog */}
+      <WordsManagementModal
+        isOpen={Boolean(managingWordsCollection)}
+        collection={managingWordsCollection}
+        onClose={() => setManagingWordsCollection(null)}
+        onWordsUpdated={handleWordsUpdated}
       />
     </>
   );

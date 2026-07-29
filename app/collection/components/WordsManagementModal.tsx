@@ -1,0 +1,460 @@
+/**
+ * PURPOSE:
+ * Pop-up modal component for managing vocabulary words within a collection.
+ * Displays all existing words, supports word deletion via deleteWord service,
+ * and includes a react-hook-form to add new words (createWord service) or update selected words (updateWord service).
+ *
+ * CONTEXT/PARENT FILE:
+ * Rendered by app/collection/CollectionClient.tsx.
+ *
+ * INPUTS / PARAMETERS:
+ * - isOpen (boolean, Required): Controls modal visibility.
+ * - collection (VocabularyCollectionUncheckedCreateInput | null, Required): Selected collection object.
+ * - onClose (function, Required): Callback to close the modal.
+ * - onWordsUpdated (function, Required): Callback to update parent collection state with new words list.
+ */
+
+"use client";
+
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useForm } from "react-hook-form";
+import { motion, AnimatePresence } from "framer-motion";
+import { VocabularyCollectionUncheckedCreateInput } from "@/app/types/collection";
+import { VocabularyWordUncheckedCreateInput } from "@/app/types/word";
+import { createWord } from "@/app/services/words/create-word";
+import { updateWord } from "@/app/services/words/update-word";
+import { deleteWord } from "@/app/services/words/delete-word";
+import { designTokens } from "@/app/constants/design-tokens";
+import { useNotification } from "@/app/context/NotificationContext";
+
+interface WordsManagementModalProps {
+  isOpen: boolean;
+  collection: VocabularyCollectionUncheckedCreateInput | null;
+  onClose: () => void;
+  onWordsUpdated: (
+    collectionId: string,
+    updatedWords: VocabularyWordUncheckedCreateInput[]
+  ) => void;
+}
+
+export type WordFormInputs = {
+  term: string;
+  meaning: string;
+  example?: string;
+  note?: string;
+};
+
+/**
+ * WordsManagementModal
+ *
+ * BEHAVIORAL MECHANISM:
+ * Displays a list of words in the active collection and an inline react-hook-form.
+ * Clicking a word selects it for editing, turning the form into Update mode.
+ * Deleting a word calls deleteWord API and removes it from the local list.
+ */
+const WordsManagementModal = memo(function WordsManagementModal({
+  isOpen,
+  collection,
+  onClose,
+  onWordsUpdated,
+}: WordsManagementModalProps) {
+  const { showNotification } = useNotification();
+
+  // Words list and selection state
+  const [wordsList, setWordsList] = useState<VocabularyWordUncheckedCreateInput[]>([]);
+  const [selectedWord, setSelectedWord] = useState<VocabularyWordUncheckedCreateInput | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<WordFormInputs>({
+    defaultValues: {
+      term: "",
+      meaning: "",
+      example: "",
+      note: "",
+    },
+  });
+
+  // Synchronize local words state when modal opens or collection changes
+  useEffect(() => {
+    if (collection) {
+      setWordsList(collection.words || []);
+      setSelectedWord(null);
+      reset({ term: "", meaning: "", example: "", note: "" });
+    }
+  }, [collection, reset]);
+
+  // Select a word for update mode
+  const handleSelectWord = useCallback(
+    (word: VocabularyWordUncheckedCreateInput) => {
+      setSelectedWord(word);
+      reset({
+        term: word.term,
+        meaning: word.meaning,
+        example: word.example || "",
+        note: word.note || "",
+      });
+    },
+    [reset]
+  );
+
+  // Deselect word & return form to Add mode
+  const handleCancelEdit = useCallback(() => {
+    setSelectedWord(null);
+    reset({ term: "", meaning: "", example: "", note: "" });
+  }, [reset]);
+
+  // Create word handler (type="submit")
+  const handleCreateWord = async (data: WordFormInputs) => {
+    if (!collection?.id) return;
+
+    setIsSubmitting(true);
+    const { data: created, error } = await createWord({
+      collectionId: collection.id,
+      term: data.term.trim(),
+      meaning: data.meaning.trim(),
+      example: data.example?.trim(),
+      note: data.note?.trim(),
+    });
+    setIsSubmitting(false);
+
+    if (error || !created) {
+      showNotification(error || "Failed to create word", "error");
+      return;
+    }
+
+    const nextList = [...wordsList, created];
+    setWordsList(nextList);
+    onWordsUpdated(collection.id, nextList);
+    reset({ term: "", meaning: "", example: "", note: "" });
+    showNotification("Word added successfully!", "success");
+  };
+
+  // Update word handler (type="button")
+  const handleUpdateWord = async () => {
+    if (!collection?.id || !selectedWord?.id) return;
+
+    // Trigger manual validation if needed
+    const data = {
+      term: (document.getElementById("word-term-input") as HTMLInputElement)?.value || "",
+      meaning: (document.getElementById("word-meaning-input") as HTMLInputElement)?.value || "",
+      example: (document.getElementById("word-example-input") as HTMLInputElement)?.value || "",
+      note: (document.getElementById("word-note-input") as HTMLInputElement)?.value || "",
+    };
+
+    if (!data.term.trim() || !data.meaning.trim()) {
+      showNotification("Term and Meaning are required", "error");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { data: updated, error } = await updateWord({
+      id: selectedWord.id,
+      collectionId: collection.id,
+      term: data.term.trim(),
+      meaning: data.meaning.trim(),
+      example: data.example?.trim(),
+      note: data.note?.trim(),
+    });
+    setIsSubmitting(false);
+
+    if (error || !updated) {
+      showNotification(error || "Failed to update word", "error");
+      return;
+    }
+
+    const nextList = wordsList.map((w) => (w.id === updated.id ? updated : w));
+    setWordsList(nextList);
+    onWordsUpdated(collection.id, nextList);
+    setSelectedWord(null);
+    reset({ term: "", meaning: "", example: "", note: "" });
+    showNotification("Word updated successfully!", "success");
+  };
+
+  // Delete word handler
+  const handleDeleteWord = async (
+    e: React.MouseEvent,
+    wordId: string
+  ) => {
+    e.stopPropagation();
+    if (!collection?.id) return;
+
+    setDeletingId(wordId);
+    const { error } = await deleteWord({
+      id: wordId,
+      collectionId: collection.id,
+    });
+    setDeletingId(null);
+
+    if (error) {
+      showNotification(error, "error");
+      return;
+    }
+
+    const nextList = wordsList.filter((w) => w.id !== wordId);
+    setWordsList(nextList);
+    onWordsUpdated(collection.id, nextList);
+
+    if (selectedWord?.id === wordId) {
+      setSelectedWord(null);
+      reset({ term: "", meaning: "", example: "", note: "" });
+    }
+
+    showNotification("Word deleted successfully!", "success");
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && collection && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-900/60 backdrop-blur-xs select-none"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className={`w-full max-w-4xl max-h-[90vh] ${designTokens.colors.bg.card} ${designTokens.radii.card} ${designTokens.shadows.card} border ${designTokens.colors.border.default} flex flex-col overflow-hidden`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-neutral-100 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-sky-50 text-sky-700 border border-sky-200">
+                  {collection.language?.name || "Vocabulary"}
+                </span>
+                <div>
+                  <h3 className={`text-lg font-bold ${designTokens.colors.text.primary} truncate max-w-md`}>
+                    {collection.name} — Words Management
+                  </h3>
+                  <p className={`text-xs ${designTokens.colors.text.secondary}`}>
+                    Total Words: {wordsList.length}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition cursor-pointer font-bold text-sm"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body: Grid Split View */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1 divide-y lg:divide-y-0 lg:divide-x divide-neutral-100">
+              
+              {/* Left Column: Words List (7 cols) */}
+              <div className="lg:col-span-7 p-5 flex flex-col gap-4">
+                <div className="flex items-center justify-between shrink-0">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">
+                    Existing Words ({wordsList.length})
+                  </h4>
+                  <span className="text-[11px] text-neutral-400">
+                    Click word to edit
+                  </span>
+                </div>
+
+                {wordsList.length === 0 ? (
+                  <div className="p-8 text-center border border-dashed border-neutral-200 rounded-xl">
+                    <p className="text-xs text-neutral-400 font-medium">
+                      No words added to this collection yet. Use the form to add your first word!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1.5">
+                    {wordsList.map((word, idx) => {
+                      const isSelected = selectedWord?.id === word.id;
+                      const isDeleting = deletingId === word.id;
+
+                      return (
+                        <div
+                          key={word.id || idx}
+                          onClick={() => handleSelectWord(word)}
+                          className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start justify-between gap-3 ${
+                            isSelected
+                              ? "bg-sky-50/80 border-sky-400 ring-2 ring-sky-300/40 shadow-xs"
+                              : "bg-white border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/80"
+                          }`}
+                        >
+                          <div className="flex flex-col gap-1 min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-neutral-800 truncate">
+                                {word.term}
+                              </span>
+                              <span className="text-xs text-sky-700 font-semibold truncate">
+                                = {word.meaning}
+                              </span>
+                            </div>
+
+                            {word.example && (
+                              <p className="text-[11px] text-neutral-500 italic truncate">
+                                &quot;{word.example}&quot;
+                              </p>
+                            )}
+
+                            {word.note && (
+                              <p className="text-[10px] text-neutral-400 truncate">
+                                Note: {word.note}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            disabled={isDeleting}
+                            onClick={(e) => word.id && handleDeleteWord(e, word.id)}
+                            title="Delete word"
+                            className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer shrink-0"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Column: React Hook Form (5 cols) */}
+              <div className="lg:col-span-5 p-5 flex flex-col gap-4 bg-neutral-50/50">
+                <div className="flex items-center justify-between border-b border-neutral-200/80 pb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sky-700">
+                    {selectedWord ? "Edit Selected Word" : "Add New Word"}
+                  </h4>
+                  {selectedWord && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="text-[11px] font-semibold text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
+
+                <form onSubmit={handleSubmit(handleCreateWord)} className="flex flex-col gap-3.5">
+                  {/* Term */}
+                  <div className="flex flex-col gap-1">
+                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                      Term (Vocabulary)
+                    </label>
+                    <input
+                      id="word-term-input"
+                      type="text"
+                      placeholder="e.g. Bonjour"
+                      className={`h-9 px-3 border ${
+                        errors.term ? designTokens.colors.border.error : designTokens.colors.border.default
+                      } ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      {...register("term", { required: "Term is required" })}
+                    />
+                    {errors.term && (
+                      <p className={`text-[11px] ${designTokens.colors.text.error}`}>
+                        {errors.term.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Meaning */}
+                  <div className="flex flex-col gap-1">
+                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                      Meaning / Translation
+                    </label>
+                    <input
+                      id="word-meaning-input"
+                      type="text"
+                      placeholder="e.g. Hello / Good day"
+                      className={`h-9 px-3 border ${
+                        errors.meaning ? designTokens.colors.border.error : designTokens.colors.border.default
+                      } ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      {...register("meaning", { required: "Meaning is required" })}
+                    />
+                    {errors.meaning && (
+                      <p className={`text-[11px] ${designTokens.colors.text.error}`}>
+                        {errors.meaning.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Example */}
+                  <div className="flex flex-col gap-1">
+                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                      Example Usage (Optional)
+                    </label>
+                    <input
+                      id="word-example-input"
+                      type="text"
+                      placeholder="e.g. Bonjour tout le monde!"
+                      className={`h-9 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      {...register("example")}
+                    />
+                  </div>
+
+                  {/* Note */}
+                  <div className="flex flex-col gap-1">
+                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                      Note / Context (Optional)
+                    </label>
+                    <input
+                      id="word-note-input"
+                      type="text"
+                      placeholder="e.g. Formal greeting"
+                      className={`h-9 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      {...register("note")}
+                    />
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-200">
+                    {selectedWord ? (
+                      /* Update Mode: Button type="button" */
+                      <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={handleUpdateWord}
+                        className={`w-full py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Update Word
+                      </button>
+                    ) : (
+                      /* Add Mode: Button type="submit" */
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`w-full py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5`}
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Add Word
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+});
+
+export default WordsManagementModal;
