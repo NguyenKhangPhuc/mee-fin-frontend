@@ -411,22 +411,24 @@ export default function UserDashboardClient({
   }, []);
 
   return (
-    <div className={`min-h-screen p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
-      <div className="max-w-6xl mx-auto flex flex-col gap-10">
+    <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
+      <div className="max-w-7xl mx-auto flex flex-col gap-8">
 
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="flex flex-col gap-1"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6"
         >
-          <h1 className={`text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
-            User Dashboard
-          </h1>
-          <p className={`text-sm ${designTokens.colors.text.secondary}`}>
-            Manage your personal profile information, languages, and scheduled slots
-          </p>
+          <div>
+            <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
+              User Dashboard
+            </h1>
+            <p className={`text-xs sm:text-sm mt-1 ${designTokens.colors.text.secondary}`}>
+              Manage your personal profile information, languages, and scheduled slots
+            </p>
+          </div>
         </motion.div>
 
         {/* Profile Card Section */}
