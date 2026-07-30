@@ -1,17 +1,16 @@
 /**
  * PURPOSE:
  * Orchestrator client component for the Community Members page.
- * Manages member search state, profile selection, slot booking requests, and
- * delegates UI rendering to modular sub-components in app/community/components/.
- * Employs React.memo, useMemo, and useCallback to ensure smooth performance
- * and zero FullCalendar re-render lag.
+ * Manages member search state, profile selection, pagination (currentPage, totalPages),
+ * slot booking requests, and delegates UI rendering to modular sub-components in app/community/components/.
  *
  * CONTEXT/PARENT FILE:
  * Mounted by app/community/page.tsx Server Component.
  *
  * INPUTS / PARAMETERS:
  * - currentUser (SafeUser | null, Optional): Authenticated user session object.
- * - profiles (ProfileUncheckedCreateInput[], Required): Array of initial community member profile objects.
+ * - initialProfiles (ProfileUncheckedCreateInput[], Optional): Initial page 1 profiles array.
+ * - initialMeta (PaginationMeta, Optional): Pagination metadata object containing total, totalPages, page.
  */
 
 "use client";
@@ -21,6 +20,7 @@ import { SafeUser } from "@/app/types/authentication";
 import { ProfileUncheckedCreateInput, SlotUncheckedCreateInput } from "@/app/types";
 import { designTokens } from "@/app/constants/design-tokens";
 import { bookUserSlot } from "@/app/services/slots/book-user-slot";
+import { getAllUserProfileWithLanguagesAndSlots, PaginationMeta } from "@/app/services/profile/get-all-user";
 import { useNotification } from "@/app/context/NotificationContext";
 import { useLoader } from "@/app/context/LoaderContext";
 
@@ -33,38 +33,47 @@ import BookingModal from "./components/BookingModal";
 
 interface CommunityClientProps {
   currentUser?: SafeUser | null;
-  profiles: ProfileUncheckedCreateInput[];
+  initialProfiles?: ProfileUncheckedCreateInput[];
+  initialMeta?: PaginationMeta;
 }
 
 /**
  * CommunityClient
  *
  * BEHAVIORAL MECHANISM:
- * Maintains the canonical community state (profilesList, searchQuery, selectedProfileId, selectedSlotToBook).
- * Uses useMemo for search filtering and FullCalendar event creation so that typing in the search bar
- * does not force FullCalendar to re-parse events or rebuild its DOM tree.
- * Uses useCallback for all event handlers passed to memoized child components.
+ * Maintains the canonical community state (profilesList, searchQuery, currentPage, totalPages, selectedProfileId).
+ * Handles async page changes via handlePageChange, requesting paginated profiles from getAllUserProfileWithLanguagesAndSlots.
  *
  * PARAMETERS:
- * - props (CommunityClientProps): Contains currentUser and initial profiles list.
+ * - props (CommunityClientProps): Contains currentUser, initialProfiles, and initialMeta.
  *
  * RETURNS:
  * - JSX.Element: The community members page layout with sidebar directory and detail panel.
  */
-export default function CommunityClient({ currentUser, profiles }: CommunityClientProps) {
+export default function CommunityClient({
+  currentUser,
+  initialProfiles = [],
+  initialMeta,
+}: CommunityClientProps) {
   const { showNotification } = useNotification();
-  const { setIsOpenLoader } = useLoader();
+  const { setIsOpenLoader, isOpenLoader } = useLoader();
 
   // State
-  const [profilesList, setProfilesList] = useState<ProfileUncheckedCreateInput[]>(profiles);
+  const [profilesList, setProfilesList] = useState<ProfileUncheckedCreateInput[]>(initialProfiles);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>(
-    profiles[0]?.id || ""
+    initialProfiles[0]?.id || ""
   );
   const [selectedSlotToBook, setSelectedSlotToBook] = useState<SlotUncheckedCreateInput | null>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(initialMeta?.page || 1);
+  const [totalPages, setTotalPages] = useState<number>(initialMeta?.totalPages || 1);
+  const [totalCount, setTotalCount] = useState<number>(initialMeta?.total || initialProfiles.length);
+
   // Derived values — memoized to prevent unnecessary re-computations
   const filteredProfiles = useMemo(() => {
+    if (!searchQuery.trim()) return profilesList;
     const q = searchQuery.toLowerCase();
     return profilesList.filter((p) => {
       const name = p.fullName?.toLowerCase() || "";
@@ -84,11 +93,51 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
   }, [selectedProfile]);
 
   /**
+   * handlePageChange
+   *
+   * BEHAVIORAL MECHANISM:
+   * Triggers global loader, calls getAllUserProfileWithLanguagesAndSlots service for target page number,
+   * updates profilesList, currentPage, totalPages, and selectedProfileId state on resolution.
+   *
+   * PARAMETERS:
+   * - newPage (number): Target 1-indexed page number to fetch.
+   *
+   * RETURNS:
+   * - Promise<void>
+   */
+  const handlePageChange = useCallback(
+    async (newPage: number) => {
+      if (newPage < 1 || newPage > totalPages || newPage === currentPage) return;
+
+      setIsOpenLoader(true);
+      const { data: res, error } = await getAllUserProfileWithLanguagesAndSlots({
+        page: newPage,
+        limit: 5,
+      });
+      setIsOpenLoader(false);
+
+      if (error || !res) {
+        showNotification(error || "Failed to load member page.", "error");
+        return;
+      }
+
+      setProfilesList(res.data);
+      setCurrentPage(res.meta.page);
+      setTotalPages(res.meta.totalPages);
+      setTotalCount(res.meta.total);
+
+      if (res.data.length > 0) {
+        setSelectedProfileId(res.data[0].id);
+      }
+    },
+    [currentPage, totalPages, setIsOpenLoader, showNotification]
+  );
+
+  /**
    * handleSearchChange
    *
    * BEHAVIORAL MECHANISM:
    * Updates the searchQuery string state when the user types into the search input.
-   * Triggers re-computation of the memoized filteredProfiles array.
    *
    * PARAMETERS:
    * - query (string): The new search string entered by the user.
@@ -105,7 +154,6 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
    *
    * BEHAVIORAL MECHANISM:
    * Updates the selectedProfileId state when a user clicks on a member card in the sidebar directory.
-   * Triggers re-computation of selectedProfile and its corresponding calendarEvents.
    *
    * PARAMETERS:
    * - id (string): The unique profile ID of the selected member.
@@ -122,8 +170,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
    *
    * BEHAVIORAL MECHANISM:
    * Receives FullCalendar's event click payload. Inspects the event's extendedProps to verify
-   * if the slot is already booked. If available, looks up the slot object inside the selected
-   * member's provideSlots array and sets selectedSlotToBook to display the booking confirmation modal.
+   * if the slot is already booked. If available, sets selectedSlotToBook to display the booking confirmation modal.
    *
    * PARAMETERS:
    * - clickInfo (any): The event click payload object emitted by FullCalendar.
@@ -156,11 +203,9 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
    *
    * BEHAVIORAL MECHANISM:
    * Validates user authentication, triggers global loader state, and invokes the bookUserSlot service API.
-   * Upon API success, immutably updates profilesList in local state to mark the slot status as BOOKED
-   * and link the exchangeUserId, then resets selectedSlotToBook to close the modal.
    *
    * PARAMETERS:
-   * None (accesses state variables selectedSlotToBook, currentUser, selectedProfile via closure).
+   * None.
    *
    * RETURNS:
    * - Promise<void>
@@ -212,8 +257,7 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
    * handleCloseModal
    *
    * BEHAVIORAL MECHANISM:
-   * Resets selectedSlotToBook state to null, causing BookingModal's AnimatePresence
-   * to animate the modal out of view.
+   * Resets selectedSlotToBook state to null.
    *
    * PARAMETERS:
    * None.
@@ -244,7 +288,12 @@ export default function CommunityClient({ currentUser, profiles }: CommunityClie
             <MembersDirectory
               profiles={filteredProfiles}
               selectedProfileId={selectedProfile?.id || ""}
+              total={totalCount}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              isLoading={isOpenLoader}
               onSelectProfile={handleSelectProfile}
+              onPageChange={handlePageChange}
             />
 
             {/* Selected User Details & Schedule Calendar Column (Right) */}
