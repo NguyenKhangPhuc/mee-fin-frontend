@@ -1,5 +1,5 @@
-import { SlotStatus } from "./enum";
-import { LanguageUncheckedCreateInput } from "./language";
+import { ProfileUncheckedCreateInput } from "./profile";
+import { SlotRatingUncheckedCreateInput } from "./ratings";
 
 export type SlotUncheckedCreateInput = {
     id?: string;
@@ -17,8 +17,11 @@ export type SlotUncheckedCreateInput = {
     videoExpiresAt?: Date | string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
-    exchangeLanguage?: LanguageUncheckedCreateInput,
-    provideLanguage?: LanguageUncheckedCreateInput,
+    exchangeLanguage?: LanguageUncheckedCreateInput;
+    provideLanguage?: LanguageUncheckedCreateInput;
+    slotRatings?: SlotRatingUncheckedCreateInput[];
+    owner?: ProfileUncheckedCreateInput;
+    exchangeUser?: ProfileUncheckedCreateInput;
 };
 
 export interface SlotCreationDto {

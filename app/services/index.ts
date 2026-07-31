@@ -130,4 +130,5 @@ export * from './profile';
 export * from './slots';
 export * from './collections';
 export * from './words';
+export * from './ratings';
 

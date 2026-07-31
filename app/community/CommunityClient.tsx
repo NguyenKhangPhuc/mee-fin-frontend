@@ -57,7 +57,7 @@ export default function CommunityClient({
 }: CommunityClientProps) {
   const { showNotification } = useNotification();
   const { setIsOpenLoader, isOpenLoader } = useLoader();
-
+  console.log(initialProfiles)
   // State
   const [profilesList, setProfilesList] = useState<ProfileUncheckedCreateInput[]>(initialProfiles);
   const [searchQuery, setSearchQuery] = useState<string>("");

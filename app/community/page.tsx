@@ -21,6 +21,7 @@ export default async function CommunityPage() {
     getAllUserProfileWithLanguagesAndSlots({ page: 1, limit: 5 }),
   ]);
 
+
   return (
     <CommunityClient
       currentUser={currentUser}

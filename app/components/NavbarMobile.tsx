@@ -63,6 +63,14 @@ function CollectionIcon() {
   );
 }
 
+function HistoryIcon() {
+  return (
+    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,6 +97,7 @@ const NAV_ITEMS = [
   { title: "Dashboard", link: "/dashboard", icon: DashboardIcon },
   { title: "Community", link: "/community", icon: CommunityIcon },
   { title: "Your Collection", link: "/collection", icon: CollectionIcon },
+  { title: "Meeting History", link: "/history", icon: HistoryIcon },
 ];
 
 export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
