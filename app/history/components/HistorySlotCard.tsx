@@ -1,7 +1,7 @@
 /**
  * PURPOSE:
  * Renders an individual meeting slot card in the History page, displaying meeting status,
- * title, date/time, duration, provide/exchange languages, participant names (Host & Guest),
+ * title, date/time, duration, provide/exchange languages, participant display names (Host & Guest),
  * both user-given rating and received partner rating, and rating management controls.
  * Wrapped in React.memo for high performance.
  *
@@ -42,9 +42,8 @@ interface HistorySlotCardProps {
  * HistorySlotCard
  *
  * BEHAVIORAL MECHANISM:
- * Renders slot details including status badge, host and guest names, languages, time, and dual ratings.
- * Identifies both givenRating (created by current user) and receivedRating (created by partner).
- * Displays partner name on both participant headers and rating blocks.
+ * Renders slot details including status badge, host and guest display names, languages, time, and dual ratings.
+ * Displays displayName for both given rating and received rating.
  *
  * PARAMETERS:
  * - props (HistorySlotCardProps): Contains slot item, current user ID, and action callbacks.
@@ -62,9 +61,9 @@ const HistorySlotCard = memo(function HistorySlotCard({
 }: HistorySlotCardProps) {
   const isHost = slot.ownerId === currentUserId;
 
-  // Participant Names
-  const hostName = slot.owner?.fullName || slot.owner?.email || "Host";
-  const guestName = slot.exchangeUser?.fullName || slot.exchangeUser?.email || "Guest / Unbooked";
+  // Participant Display Names
+  const hostName = slot.owner?.fullName || slot.owner?.fullName || slot.owner?.email || "Host";
+  const guestName = slot.exchangeUser?.fullName || slot.exchangeUser?.fullName || slot.exchangeUser?.email || "Guest / Unbooked";
   const partnerName = isHost ? guestName : hostName;
 
   // Rating Given by Current User for Partner
@@ -89,18 +88,18 @@ const HistorySlotCard = memo(function HistorySlotCard({
 
   const startDateStr = slot.startTime
     ? new Date(slot.startTime).toLocaleDateString([], {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
     : "N/A";
 
   const startTimeStr = slot.startTime
     ? new Date(slot.startTime).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "N/A";
 
   const isCompleted = status === SlotStatus.COMPLETED;
@@ -139,7 +138,7 @@ const HistorySlotCard = memo(function HistorySlotCard({
             {slot.title}
           </h3>
 
-          {/* Participant Names */}
+          {/* Participant Display Names */}
           <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-neutral-600">
             <div className="flex items-center gap-1.5">
               <span className="text-neutral-400">Host:</span>
@@ -175,7 +174,7 @@ const HistorySlotCard = memo(function HistorySlotCard({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-neutral-700">
-                    Your Rating for <span className="text-sky-700">{partnerName}</span>:
+                    Your Rating for <span className="text-sky-700">{partnerName}</span> (as <span className="text-amber-700 font-semibold">{givenRating.displayName || "You"}</span>):
                   </span>
                   <div className="flex items-center text-amber-400 text-sm">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -250,7 +249,7 @@ const HistorySlotCard = memo(function HistorySlotCard({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-sky-900">
-                    {partnerName}&apos;s Rating for You:
+                    <span className="font-extrabold text-sky-800">{receivedRating.displayName || partnerName}</span>&apos;s Rating for You:
                   </span>
                   <div className="flex items-center text-amber-400 text-sm">
                     {[1, 2, 3, 4, 5].map((star) => (

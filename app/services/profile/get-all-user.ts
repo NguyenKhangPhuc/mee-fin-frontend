@@ -1,7 +1,7 @@
 /**
  * PURPOSE:
- * API service for fetching all user profiles with language exchange preferences
- * and available slots. Supports pagination parameters (page, limit).
+ * API service for fetching all user profiles with language exchange preferences,
+ * available slots, and rating statistics (rating_avg, rating_count). Supports pagination (page, limit).
  *
  * CONTEXT/PARENT FILE:
  * Used by app/community/page.tsx Server Component and app/community/CommunityClient.tsx.
@@ -10,10 +10,10 @@
  * - query (GetProfilesQuery, Optional): Object containing page and limit.
  *
  * RETURNS:
- * - Promise<{ data: PaginatedResponse<ProfileUncheckedCreateInput> | null; error: string | null }>
+ * - Promise<{ data: PaginatedResponse<ProfileWithScore> | null; error: string | null }>
  */
 
-import { ProfileUncheckedCreateInput } from "@/app/types";
+import { ProfileWithScore } from "@/app/types/profile";
 import api from "..";
 import { ResponseError } from "@/app/types/error";
 import axios from "axios";
@@ -40,11 +40,11 @@ export interface GetProfilesQuery {
 export const getAllUserProfileWithLanguagesAndSlots = async (
   query?: GetProfilesQuery
 ): Promise<{
-  data: PaginatedResponse<ProfileUncheckedCreateInput> | null;
+  data: PaginatedResponse<ProfileWithScore> | null;
   error: string | null;
 }> => {
   try {
-    const result = await api.get<PaginatedResponse<ProfileUncheckedCreateInput>>(
+    const result = await api.get<PaginatedResponse<ProfileWithScore>>(
       "/profile/languages-slots",
       {
         params: query,

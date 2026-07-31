@@ -6,7 +6,7 @@
  * Used by app/history/HistoryClient.tsx.
  *
  * INPUTS / PARAMETERS:
- * - payload (RatingUpdatePayload, Required): Object containing rating id, slotId, raterId, ratedUserId, rating, feedback.
+ * - payload (RatingUpdatePayload, Required): Object containing rating id, slotId, raterId, ratedUserId, rating, feedback, displayName.
  *
  * RETURNS:
  * - Promise<{ data: SlotRatingUncheckedCreateInput | null; error: string | null }>
@@ -24,6 +24,7 @@ export interface RatingUpdatePayload {
   ratedUserId: string;
   rating: number;
   feedback: string;
+  displayName: string;
 }
 
 export const updateRating = async (

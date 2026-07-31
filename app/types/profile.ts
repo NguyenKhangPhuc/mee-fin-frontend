@@ -1,3 +1,4 @@
+import { SlotRatingUncheckedCreateInput } from "./ratings";
 import { SlotUncheckedCreateInput } from "./slot";
 import { UserLanguageUncheckedCreateInput } from "./user_language";
 
@@ -19,9 +20,9 @@ export type ProfileUncheckedCreateInput = {
     description?: string | null;
     createdAt?: Date | string;
     updatedAt?: Date | string;
-    userlanguage?: UserLanguageUncheckedCreateInput[]
-    provideSlots?: SlotUncheckedCreateInput[]
-    exchangeSlots?: SlotUncheckedCreateInput[]
+    userlanguage?: UserLanguageUncheckedCreateInput[];
+    provideSlots?: SlotUncheckedCreateInput[];
+    exchangeSlots?: SlotUncheckedCreateInput[];
 };
 
 export interface ProfileUpdationDto {
@@ -46,4 +47,14 @@ export interface ProfileResponse {
     success: boolean;
     message?: string;
     profile?: ProfileUncheckedCreateInput;
+}
+
+export interface ProfileWithScore extends ProfileUncheckedCreateInput {
+    rating_avg?: number;
+    rating_count?: number;
+    open_slots_count?: number;
+    ratingAvg?: number;
+    ratingCount?: number;
+    ratingsReceived?: SlotRatingUncheckedCreateInput[];
+    score?: number;
 }

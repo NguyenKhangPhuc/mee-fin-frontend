@@ -1,3 +1,5 @@
+import { SlotStatus } from "./enum";
+import { LanguageUncheckedCreateInput } from "./language";
 import { ProfileUncheckedCreateInput } from "./profile";
 import { SlotRatingUncheckedCreateInput } from "./ratings";
 

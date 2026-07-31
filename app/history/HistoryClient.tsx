@@ -78,6 +78,8 @@ export default function HistoryClient({
   // Delete Confirmation Modal State
   const [deletingTarget, setDeletingTarget] = useState<{ slotId: string; ratingId: string } | null>(null);
 
+  const currentUserDisplayName = currentUser?.displayName || currentUser?.email || "User";
+
   /**
    * fetchSlots
    *
@@ -165,8 +167,7 @@ export default function HistoryClient({
    * handleSaveRating
    *
    * BEHAVIORAL MECHANISM:
-   * Handles both creation of new rating and updation of existing rating.
-   * Calculates raterId (current user) and ratedUserId (other participant).
+   * Handles both creation of new rating and updation of existing rating with chosen displayName.
    */
   const handleSaveRating = useCallback(
     async (formData: RatingFormInputs) => {
@@ -194,6 +195,7 @@ export default function HistoryClient({
           ratedUserId,
           rating: formData.rating,
           feedback: formData.feedback,
+          displayName: formData.displayName,
         });
 
         setIsOpenLoader(false);
@@ -208,7 +210,15 @@ export default function HistoryClient({
           prev.map((s) => {
             if (s.id !== ratingSlot.id) return s;
             const updatedRatings = (s.slotRatings || []).map((r) =>
-              r.id === editingRating.id ? { ...r, ...updated, rating: formData.rating, feedback: formData.feedback } : r
+              r.id === editingRating.id
+                ? {
+                    ...r,
+                    ...updated,
+                    rating: formData.rating,
+                    feedback: formData.feedback,
+                    displayName: formData.displayName,
+                  }
+                : r
             );
             return { ...s, slotRatings: updatedRatings };
           })
@@ -223,6 +233,7 @@ export default function HistoryClient({
           ratedUserId,
           rating: formData.rating,
           feedback: formData.feedback,
+          displayName: formData.displayName,
         });
 
         setIsOpenLoader(false);
@@ -238,6 +249,7 @@ export default function HistoryClient({
           ratedUserId,
           rating: formData.rating,
           feedback: formData.feedback,
+          displayName: formData.displayName,
         };
 
         // Update local state
@@ -366,6 +378,7 @@ export default function HistoryClient({
         slot={ratingSlot}
         initialRating={editingRating}
         currentUserId={currentUser?.id || ""}
+        currentUserDisplayName={currentUserDisplayName}
         isLoading={isOpenLoader}
         onClose={() => {
           setRatingSlot(null);

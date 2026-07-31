@@ -1,7 +1,7 @@
 /**
  * PURPOSE:
  * Renders the left sidebar list of filtered community members with a custom-styled scrollbar,
- * increased height, and an integrated reusable Pagination component at the bottom.
+ * rating_avg statistics, increased height, and an integrated reusable Pagination component at the bottom.
  * Wrapped in React.memo to prevent unnecessary re-renders when selecting profiles.
  *
  * CONTEXT/PARENT FILE:
@@ -9,7 +9,7 @@
  * Mounted in the left column (lg:col-span-4) of the Community page main layout.
  *
  * INPUTS / PARAMETERS:
- * - profiles (ProfileUncheckedCreateInput[], Required): Array of profile objects to display.
+ * - profiles (ProfileWithScore[], Required): Array of profile objects to display.
  * - selectedProfileId (string, Required): Currently selected profile ID.
  * - total (number, Required): Total profile count.
  * - currentPage (number, Required): Current active page.
@@ -23,12 +23,12 @@
 
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ProfileUncheckedCreateInput } from "@/app/types";
+import { ProfileWithScore } from "@/app/types/profile";
 import { designTokens } from "@/app/constants/design-tokens";
 import Pagination from "@/app/components/Pagination";
 
 interface MembersDirectoryProps {
-  profiles: ProfileUncheckedCreateInput[];
+  profiles: ProfileWithScore[];
   selectedProfileId: string;
   total: number;
   currentPage: number;
@@ -43,7 +43,7 @@ interface MembersDirectoryProps {
  *
  * BEHAVIORAL MECHANISM:
  * Displays total member count badge, renders a scrollable list of community member cards with custom scrollbar,
- * and mounts the reusable Pagination component below the list.
+ * shows average rating (rating_avg), and mounts the reusable Pagination component below the list.
  *
  * PARAMETERS:
  * - props (MembersDirectoryProps): Profiles array, pagination state, and action callbacks.
@@ -75,6 +75,8 @@ const MembersDirectory = memo(function MembersDirectory({
               const isSelected = selectedProfileId === p.id;
               const avatar = p.publicAvatarUrl || p.avatarUrl;
               const slotCount = p.provideSlots?.length || 0;
+              const ratingAvg = Number(p.rating_avg ?? p.ratingAvg ?? 0).toFixed(1);
+              const ratingCount = p.rating_count ?? p.ratingCount ?? 0;
 
               return (
                 <motion.button
@@ -107,16 +109,31 @@ const MembersDirectory = memo(function MembersDirectory({
 
                   {/* Info */}
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className={`text-sm font-semibold truncate ${designTokens.colors.text.primary}`}>
-                      {p.fullName || "Unnamed Member"}
-                    </span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className={`text-sm font-semibold truncate ${designTokens.colors.text.primary}`}>
+                        {p.fullName || "Unnamed Member"}
+                      </span>
+
+                      {/* Rating Avg Badge */}
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">
+                        <span>★</span>
+                        <span>{ratingAvg}</span>
+                      </span>
+                    </div>
+
                     <span className={`text-xs truncate ${designTokens.colors.text.muted}`}>
                       {p.university || p.email}
                     </span>
+
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
                         {slotCount} {slotCount === 1 ? "slot" : "slots"}
                       </span>
+                      {ratingCount > 0 && (
+                        <span className="text-[10px] text-neutral-500 font-medium">
+                          ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
+                        </span>
+                      )}
                     </div>
                   </div>
                 </motion.button>

@@ -3,13 +3,14 @@
  * Orchestrator client component for the Community Members page.
  * Manages member search state, profile selection, pagination (currentPage, totalPages),
  * slot booking requests, and delegates UI rendering to modular sub-components in app/community/components/.
+ * Uses ProfileWithScore type for member profiles.
  *
  * CONTEXT/PARENT FILE:
  * Mounted by app/community/page.tsx Server Component.
  *
  * INPUTS / PARAMETERS:
  * - currentUser (SafeUser | null, Optional): Authenticated user session object.
- * - initialProfiles (ProfileUncheckedCreateInput[], Optional): Initial page 1 profiles array.
+ * - initialProfiles (ProfileWithScore[], Optional): Initial page 1 profiles array.
  * - initialMeta (PaginationMeta, Optional): Pagination metadata object containing total, totalPages, page.
  */
 
@@ -17,7 +18,8 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { SafeUser } from "@/app/types/authentication";
-import { ProfileUncheckedCreateInput, SlotUncheckedCreateInput } from "@/app/types";
+import { SlotUncheckedCreateInput } from "@/app/types";
+import { ProfileWithScore } from "@/app/types/profile";
 import { designTokens } from "@/app/constants/design-tokens";
 import { bookUserSlot } from "@/app/services/slots/book-user-slot";
 import { getAllUserProfileWithLanguagesAndSlots, PaginationMeta } from "@/app/services/profile/get-all-user";
@@ -33,7 +35,7 @@ import BookingModal from "./components/BookingModal";
 
 interface CommunityClientProps {
   currentUser?: SafeUser | null;
-  initialProfiles?: ProfileUncheckedCreateInput[];
+  initialProfiles?: ProfileWithScore[];
   initialMeta?: PaginationMeta;
 }
 
@@ -42,7 +44,7 @@ interface CommunityClientProps {
  *
  * BEHAVIORAL MECHANISM:
  * Maintains the canonical community state (profilesList, searchQuery, currentPage, totalPages, selectedProfileId).
- * Handles async page changes via handlePageChange, requesting paginated profiles from getAllUserProfileWithLanguagesAndSlots.
+ * Handles async page changes via handlePageChange, requesting paginated ProfileWithScore profiles from getAllUserProfileWithLanguagesAndSlots.
  *
  * PARAMETERS:
  * - props (CommunityClientProps): Contains currentUser, initialProfiles, and initialMeta.
@@ -57,9 +59,9 @@ export default function CommunityClient({
 }: CommunityClientProps) {
   const { showNotification } = useNotification();
   const { setIsOpenLoader, isOpenLoader } = useLoader();
-  console.log(initialProfiles)
+
   // State
-  const [profilesList, setProfilesList] = useState<ProfileUncheckedCreateInput[]>(initialProfiles);
+  const [profilesList, setProfilesList] = useState<ProfileWithScore[]>(initialProfiles);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedProfileId, setSelectedProfileId] = useState<string>(
     initialProfiles[0]?.id || ""
@@ -112,7 +114,7 @@ export default function CommunityClient({
       setIsOpenLoader(true);
       const { data: res, error } = await getAllUserProfileWithLanguagesAndSlots({
         page: newPage,
-        limit: 5,
+        limit: 10,
       });
       setIsOpenLoader(false);
 
@@ -299,7 +301,7 @@ export default function CommunityClient({
             {/* Selected User Details & Schedule Calendar Column (Right) */}
             {selectedProfile && (
               <div className="lg:col-span-8 flex flex-col gap-6">
-                {/* Profile Card */}
+                {/* Profile Card & Ratings Received List */}
                 <MemberProfileCard profile={selectedProfile} />
 
                 {/* Member Schedule Calendar */}

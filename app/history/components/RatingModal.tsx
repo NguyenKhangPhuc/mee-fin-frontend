@@ -1,7 +1,8 @@
 /**
  * PURPOSE:
  * Pop-up modal component for creating a new rating or updating an existing rating for a meeting slot.
- * Built with react-hook-form, 1-5 star interactive selector, and Framer Motion animations.
+ * Built with react-hook-form, 1-5 star interactive selector, display name selector (User Display Name vs Anonymous User),
+ * and Framer Motion animations.
  *
  * CONTEXT/PARENT FILE:
  * Rendered by app/history/HistoryClient.tsx.
@@ -11,6 +12,7 @@
  * - slot (SlotUncheckedCreateInput | null, Required): Target meeting slot object.
  * - initialRating (SlotRatingUncheckedCreateInput | null, Optional): Existing rating for editing.
  * - currentUserId (string, Required): Logged in user ID.
+ * - currentUserDisplayName (string, Optional): User's profile display name.
  * - isLoading (boolean, Required): Loader state for button disable feedback.
  * - onClose (function, Required): Callback to dismiss the modal.
  * - onSubmit (function, Required): Async callback invoked with form data on submission.
@@ -30,6 +32,7 @@ interface RatingModalProps {
   slot: SlotUncheckedCreateInput | null;
   initialRating?: SlotRatingUncheckedCreateInput | null;
   currentUserId: string;
+  currentUserDisplayName?: string;
   isLoading: boolean;
   onClose: () => void;
   onSubmit: (data: RatingFormInputs) => Promise<void>;
@@ -38,15 +41,16 @@ interface RatingModalProps {
 export type RatingFormInputs = {
   rating: number;
   feedback: string;
+  displayName: string;
 };
 
 /**
  * RatingModal
  *
  * BEHAVIORAL MECHANISM:
- * Uses react-hook-form to manage form validation for rating (1 to 5 stars) and feedback text.
+ * Uses react-hook-form to manage form validation for rating (1 to 5 stars), feedback text,
+ * and display name preference (User Display Name or "Anonymous User").
  * Renders interactive star icons for selecting rating values.
- * Populates fields if initialRating exists (edit mode) or resets to default (create mode).
  *
  * PARAMETERS:
  * - props (RatingModalProps): Modal control state and submission handlers.
@@ -59,11 +63,15 @@ const RatingModal = memo(function RatingModal({
   slot,
   initialRating,
   currentUserId,
+  currentUserDisplayName,
   isLoading,
   onClose,
   onSubmit,
 }: RatingModalProps) {
   const [selectedStar, setSelectedStar] = useState<number>(initialRating?.rating || 5);
+
+  const realDisplayName = currentUserDisplayName || "User";
+  const anonymousOption = "Anonymous User";
 
   const {
     register,
@@ -75,20 +83,24 @@ const RatingModal = memo(function RatingModal({
     defaultValues: {
       rating: 5,
       feedback: "",
+      displayName: realDisplayName,
     },
   });
 
   useEffect(() => {
     if (isOpen) {
       const starVal = initialRating?.rating || 5;
+      const initialName = initialRating?.displayName || realDisplayName;
+
       setSelectedStar(starVal);
       setValue("rating", starVal);
       reset({
         rating: starVal,
         feedback: initialRating?.feedback || "",
+        displayName: initialName,
       });
     }
-  }, [isOpen, initialRating, reset, setValue]);
+  }, [isOpen, initialRating, realDisplayName, reset, setValue]);
 
   const handleStarClick = (val: number) => {
     setSelectedStar(val);
@@ -147,6 +159,20 @@ const RatingModal = memo(function RatingModal({
                     year: "numeric",
                   })}
                 </span>
+              </div>
+
+              {/* Display Name Identity Selection */}
+              <div className="flex flex-col gap-1.5">
+                <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                  Show Name As
+                </label>
+                <select
+                  className={`w-full p-2.5 border border-neutral-200 ${designTokens.radii.input} text-xs sm:text-sm bg-white outline-none ${designTokens.colors.border.focus}`}
+                  {...register("displayName", { required: "Display name is required" })}
+                >
+                  <option value={realDisplayName}>{realDisplayName} (Display Name)</option>
+                  <option value={anonymousOption}>Anonymous User</option>
+                </select>
               </div>
 
               {/* Interactive Star Rating Selector */}

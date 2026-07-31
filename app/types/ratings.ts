@@ -6,7 +6,8 @@ export interface SlotRatingUncheckedCreateInput {
     slotId: string
     raterId: string
     ratedUserId: string
-    rating: number
+    rating: number,
+    displayName: string,
     feedback?: string | null
     createdAt?: Date | string
     slot?: SlotUncheckedCreateInput,
