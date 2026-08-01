@@ -51,8 +51,8 @@ export const buildEventsForProfile = (
       title: `${slot.title} ${isBooked ? "(Booked)" : "(Available)"}`,
       start: startTime,
       end: endTime,
-      backgroundColor: isBooked ? "#ef4444" : "#0284c7",
-      borderColor: isBooked ? "#dc2626" : "#0369a1",
+      backgroundColor: isBooked ? "#9a3412" : "#d97757",
+      borderColor: isBooked ? "#7c2d12" : "#82301c",
       textColor: "#ffffff",
       extendedProps: {
         isBooked,

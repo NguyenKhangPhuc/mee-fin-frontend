@@ -85,23 +85,21 @@ const MembersDirectory = memo(function MembersDirectory({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -10 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
                   onClick={() => onSelectProfile(p.id)}
                   type="button"
                   className={`w-full text-left p-4 ${designTokens.radii.card} border transition-all flex items-center gap-3.5 cursor-pointer ${
                     isSelected
-                      ? "bg-sky-50/70 border-sky-500 shadow-sm ring-1 ring-sky-500/20"
-                      : `${designTokens.colors.bg.card} ${designTokens.colors.border.default} hover:bg-neutral-50`
+                      ? "bg-[#f8ede6] border-[#82301c] shadow-sm ring-1 ring-[#82301c]/30"
+                      : `${designTokens.colors.bg.card} ${designTokens.colors.border.default} hover:bg-[#f5e9e2]`
                   }`}
                 >
                   {/* Member Avatar */}
-                  <div className="relative w-11 h-11 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center border border-neutral-300 shrink-0">
+                  <div className="relative w-11 h-11 rounded-full bg-[#f5e9e2] text-[#82301c] overflow-hidden flex items-center justify-center border border-[#dfccc1] shrink-0 font-bold">
                     {avatar ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={avatar} alt={p.fullName || "User Avatar"} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-sm font-bold text-neutral-600 uppercase">
+                      <span className="text-sm font-extrabold text-[#82301c] uppercase">
                         {p.fullName?.charAt(0) || p.email?.charAt(0) || "U"}
                       </span>
                     )}
@@ -115,8 +113,8 @@ const MembersDirectory = memo(function MembersDirectory({
                       </span>
 
                       {/* Rating Avg Badge */}
-                      <span className="flex items-center gap-1 text-[11px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">
-                        <span>★</span>
+                      <span className="flex items-center gap-1 text-[11px] font-bold text-[#82301c] bg-[#f8ede6] border border-[#dfccc1] px-1.5 py-0.5 rounded shrink-0">
+                        <span className="text-[#d97757]">★</span>
                         <span>{ratingAvg}</span>
                       </span>
                     </div>
@@ -126,11 +124,11 @@ const MembersDirectory = memo(function MembersDirectory({
                     </span>
 
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-100 text-sky-700">
-                        {slotCount} {slotCount === 1 ? "slot" : "slots"}
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
+                        {slotCount} {slotCount === 1 ? "slot" : "slots"} open
                       </span>
                       {ratingCount > 0 && (
-                        <span className="text-[10px] text-neutral-500 font-medium">
+                        <span className={`text-[10px] ${designTokens.colors.text.muted} font-medium`}>
                           ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
                         </span>
                       )}

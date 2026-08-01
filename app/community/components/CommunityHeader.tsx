@@ -40,10 +40,10 @@ const CommunityHeader = memo(function CommunityHeader({
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-neutral-200 pb-6"
+      className={`flex flex-col md:flex-row md:items-center justify-between gap-4 border-b ${designTokens.colors.border.default} pb-6`}
     >
       <div>
-        <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
+        <h1 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${designTokens.colors.text.primary}`}>
           Community Members
         </h1>
         <p className={`text-xs sm:text-sm mt-1 ${designTokens.colors.text.secondary}`}>
@@ -58,10 +58,10 @@ const CommunityHeader = memo(function CommunityHeader({
           placeholder="Search members..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
-          className={`w-full h-10 pl-9 pr-4 text-xs sm:text-sm border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} bg-white transition shadow-xs`}
+          className={`w-full h-10 pl-9 pr-4 text-xs sm:text-sm border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} ${designTokens.colors.bg.input} transition shadow-xs text-[#291e1b]`}
         />
         <svg
-          className="w-4 h-4 absolute left-3 top-3 text-neutral-400"
+          className="w-4 h-4 absolute left-3 top-3 text-[#9c8c87]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

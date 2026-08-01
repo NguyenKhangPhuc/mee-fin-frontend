@@ -81,13 +81,13 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
         className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}
       >
         {/* Top Profile Summary */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-6 border-b border-neutral-100">
-          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-neutral-200 overflow-hidden flex items-center justify-center border-2 border-neutral-300 shrink-0 shadow-sm">
+        <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-5 pb-6 border-b ${designTokens.colors.border.default}`}>
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-[#f5e9e2] text-[#82301c] overflow-hidden flex items-center justify-center border-4 border-[#dfccc1] shrink-0 shadow-md shadow-[#82301c]/10 font-bold">
             {avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl sm:text-3xl font-bold text-neutral-600 uppercase">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#82301c] uppercase tracking-wider">
                 {profile.fullName?.charAt(0) || profile.email?.charAt(0) || "U"}
               </span>
             )}
@@ -99,7 +99,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                 {profile.fullName || "Unnamed Member"}
               </h2>
               {profile.age && (
-                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200">
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
                   {profile.age} yrs
                 </span>
               )}
@@ -107,11 +107,11 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
 
             {/* Rating Avg Badge Header */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
-                <span>★</span>
+              <div className="flex items-center gap-1 text-xs font-bold text-[#82301c] bg-[#f8ede6] border border-[#dfccc1] px-2.5 py-1 rounded-md shadow-xs">
+                <span className="text-[#d97757]">★</span>
                 <span>{ratingAvg} / 5.0</span>
               </div>
-              <span className="text-xs text-neutral-500 font-medium">
+              <span className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
                 ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
               </span>
             </div>
@@ -127,7 +127,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                   href={profile.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline font-medium flex items-center gap-1"
+                  className="text-xs text-[#82301c] hover:underline font-semibold flex items-center gap-1"
                 >
                   Facebook
                 </a>
@@ -137,7 +137,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                   href={profile.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-pink-600 hover:underline font-medium flex items-center gap-1"
+                  className="text-xs text-[#a34127] hover:underline font-semibold flex items-center gap-1"
                 >
                   Instagram
                 </a>
@@ -147,7 +147,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                   href={profile.linkedIn}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-sky-700 hover:underline font-medium flex items-center gap-1"
+                  className="text-xs text-[#6c2716] hover:underline font-semibold flex items-center gap-1"
                 >
                   LinkedIn
                 </a>
@@ -158,29 +158,29 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
 
         {/* Academic & Bio Details Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-3.5 rounded-lg bg-neutral-50 border border-neutral-100 flex flex-col gap-0.5">
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.muted}`}>
+          <div className="p-3.5 rounded-xl bg-[#f8ede6] border border-[#dfccc1] flex flex-col gap-0.5 shadow-xs">
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.primary}`}>
               University
             </span>
-            <span className={`text-xs font-semibold ${designTokens.colors.text.primary} truncate`}>
+            <span className={`text-xs font-semibold ${designTokens.colors.text.secondary} truncate`}>
               {profile.university || "Not provided"}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-neutral-50 border border-neutral-100 flex flex-col gap-0.5">
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.muted}`}>
+          <div className="p-3.5 rounded-xl bg-[#f8ede6] border border-[#dfccc1] flex flex-col gap-0.5 shadow-xs">
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.primary}`}>
               Programme
             </span>
-            <span className={`text-xs font-semibold ${designTokens.colors.text.primary} truncate`}>
+            <span className={`text-xs font-semibold ${designTokens.colors.text.secondary} truncate`}>
               {profile.programme || "Not provided"}
             </span>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-neutral-50 border border-neutral-100 flex flex-col gap-0.5">
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.muted}`}>
+          <div className="p-3.5 rounded-xl bg-[#f8ede6] border border-[#dfccc1] flex flex-col gap-0.5 shadow-xs">
+            <span className={`text-[10px] font-bold uppercase tracking-wider ${designTokens.colors.text.primary}`}>
               Degree
             </span>
-            <span className={`text-xs font-semibold ${designTokens.colors.text.primary} truncate`}>
+            <span className={`text-xs font-semibold ${designTokens.colors.text.secondary} truncate`}>
               {profile.degree || "Not provided"}
             </span>
           </div>
@@ -189,10 +189,10 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
         {/* Description / Bio */}
         {profile.description && (
           <div className="flex flex-col gap-1 pt-2">
-            <span className={`text-xs font-bold uppercase tracking-wider ${designTokens.colors.text.muted}`}>
+            <span className={`text-xs font-bold uppercase tracking-wider ${designTokens.colors.text.primary}`}>
               About
             </span>
-            <p className={`text-xs leading-relaxed ${designTokens.colors.text.secondary} bg-neutral-50/60 p-3.5 rounded-lg border border-neutral-100`}>
+            <p className={`text-xs leading-relaxed ${designTokens.colors.text.secondary} bg-[#f8ede6]/60 p-3.5 rounded-xl border border-[#dfccc1]`}>
               {profile.description}
             </p>
           </div>
@@ -201,28 +201,34 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
 
       {/* Ratings Received List Section */}
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
+        key={`ratings-${profile.id}`}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
+        transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
         className={`p-6 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-4`}
       >
-        <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
+        <div className={`flex items-center justify-between border-b ${designTokens.colors.border.default} pb-3`}>
           <div className="flex items-center gap-2">
             <h3 className={`text-base font-bold ${designTokens.colors.text.primary}`}>
               Received Ratings & Reviews
             </h3>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
               {ratingsReceived.length}
             </span>
           </div>
         </div>
 
         {ratingsReceived.length === 0 ? (
-          <div className="p-6 text-center border border-dashed border-neutral-200 rounded-xl">
-            <p className="text-xs text-neutral-500 font-medium">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]"
+          >
+            <p className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
               No ratings received yet for this member.
             </p>
-          </div>
+          </motion.div>
         ) : (
           <div className="flex flex-col gap-3">
             <AnimatePresence mode="wait">
@@ -230,7 +236,6 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                 const raterDisplayName =
                   ratingItem.displayName ||
                   "Anonymous User";
-                console.log(ratingItem)
                 const createdDateStr = ratingItem.createdAt
                   ? new Date(ratingItem.createdAt).toLocaleDateString([], {
                     month: "short",
@@ -242,38 +247,43 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                 return (
                   <motion.div
                     key={ratingItem.id || idx}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.2 }}
-                    className="p-4 rounded-xl bg-neutral-50/70 border border-neutral-200/80 flex flex-col gap-2"
+                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -12, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs hover:border-[#82301c]/40 transition-colors"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-neutral-800">
+                        <span className="text-xs font-bold text-[#82301c]">
                           {raterDisplayName}
                         </span>
-                        <div className="flex items-center text-amber-400 text-xs">
+                        <div className="flex items-center text-[#d97757] text-xs">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <span key={star}>
+                            <motion.span
+                              key={star}
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              transition={{ duration: 0.15, delay: star * 0.03 }}
+                            >
                               {star <= (ratingItem.rating || 0) ? "★" : "☆"}
-                            </span>
+                            </motion.span>
                           ))}
                         </div>
-                        <span className="text-xs font-bold text-amber-600">
+                        <span className="text-xs font-bold text-[#82301c]">
                           ({ratingItem.rating}/5)
                         </span>
                       </div>
 
                       {createdDateStr && (
-                        <span className="text-[11px] text-neutral-400 font-medium">
+                        <span className={`text-[11px] ${designTokens.colors.text.muted} font-medium`}>
                           {createdDateStr}
                         </span>
                       )}
                     </div>
 
                     {ratingItem.feedback && (
-                      <p className="text-xs text-neutral-600 italic pl-1">
+                      <p className={`text-xs ${designTokens.colors.text.secondary} italic pl-1`}>
                         &quot;{ratingItem.feedback}&quot;
                       </p>
                     )}
