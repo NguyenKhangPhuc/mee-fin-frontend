@@ -2,21 +2,16 @@
  * PURPOSE:
  * Pop-up modal component for managing vocabulary words within a collection.
  * Displays all existing words, supports word deletion via deleteWord service,
- * and includes a react-hook-form to add new words (createWord service) or update selected words (updateWord service).
+ * and includes a react-hook-form to add new words or update selected words.
+ * Redesigned to match the #82301c theme token design system.
  *
  * CONTEXT/PARENT FILE:
  * Rendered by app/collection/CollectionClient.tsx.
- *
- * INPUTS / PARAMETERS:
- * - isOpen (boolean, Required): Controls modal visibility.
- * - collection (VocabularyCollectionUncheckedCreateInput | null, Required): Selected collection object.
- * - onClose (function, Required): Callback to close the modal.
- * - onWordsUpdated (function, Required): Callback to update parent collection state with new words list.
  */
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { VocabularyCollectionUncheckedCreateInput } from "@/app/types/collection";
@@ -24,7 +19,6 @@ import { VocabularyWordUncheckedCreateInput } from "@/app/types/word";
 import { createWord } from "@/app/services/words/create-word";
 import { updateWord } from "@/app/services/words/update-word";
 import { deleteWord } from "@/app/services/words/delete-word";
-import { designTokens } from "@/app/constants/design-tokens";
 import { useNotification } from "@/app/context/NotificationContext";
 
 interface WordsManagementModalProps {
@@ -70,7 +64,6 @@ const WordsManagementModal = memo(function WordsManagementModal({
     register,
     handleSubmit,
     reset,
-    setValue,
     formState: { errors },
   } = useForm<WordFormInputs>({
     defaultValues: {
@@ -140,7 +133,6 @@ const WordsManagementModal = memo(function WordsManagementModal({
   const handleUpdateWord = async () => {
     if (!collection?.id || !selectedWord?.id) return;
 
-    // Trigger manual validation if needed
     const data = {
       term: (document.getElementById("word-term-input") as HTMLInputElement)?.value || "",
       meaning: (document.getElementById("word-meaning-input") as HTMLInputElement)?.value || "",
@@ -217,26 +209,26 @@ const WordsManagementModal = memo(function WordsManagementModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-900/60 backdrop-blur-xs select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/60 backdrop-blur-xs select-none font-sans"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 16 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`w-full max-w-4xl max-h-[90vh] ${designTokens.colors.bg.card} ${designTokens.radii.card} ${designTokens.shadows.card} border ${designTokens.colors.border.default} flex flex-col overflow-hidden`}
+            className="w-full max-w-4xl max-h-[90vh] bg-[#fcf7f3] rounded-3xl border border-[#dfccc1] flex flex-col overflow-hidden shadow-2xl text-[#82301c]"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-5 border-b border-neutral-100 shrink-0">
+            <div className="flex items-center justify-between p-5 border-b border-[#dfccc1] shrink-0 bg-[#f5e9e2]/50">
               <div className="flex items-center gap-3">
-                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-sky-50 text-sky-700 border border-sky-200">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-[#82301c]/20 text-[#82301c] border border-[#82301c]/30">
                   {collection.language?.name || "Vocabulary"}
                 </span>
                 <div>
-                  <h3 className={`text-lg font-bold ${designTokens.colors.text.primary} truncate max-w-md`}>
+                  <h3 className="text-lg font-bold text-[#82301c] truncate max-w-md">
                     {collection.name} — Words Management
                   </h3>
-                  <p className={`text-xs ${designTokens.colors.text.secondary}`}>
+                  <p className="text-xs text-[#82301c]/80 font-medium">
                     Total Words: {wordsList.length}
                   </p>
                 </div>
@@ -245,34 +237,35 @@ const WordsManagementModal = memo(function WordsManagementModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition cursor-pointer font-bold text-sm"
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-[#82301c]/60 hover:text-[#82301c] hover:bg-[#ede0d7] transition cursor-pointer font-bold text-sm"
+                title="Close Modal"
               >
                 ✕
               </button>
             </div>
 
             {/* Modal Body: Grid Split View */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1 divide-y lg:divide-y-0 lg:divide-x divide-neutral-100">
+            <div className="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1 divide-y lg:divide-y-0 lg:divide-x divide-[#dfccc1]">
               
               {/* Left Column: Words List (7 cols) */}
               <div className="lg:col-span-7 p-5 flex flex-col gap-4">
                 <div className="flex items-center justify-between shrink-0">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#82301c]">
                     Existing Words ({wordsList.length})
                   </h4>
-                  <span className="text-[11px] text-neutral-400">
+                  <span className="text-[11px] text-[#82301c]/70 font-medium">
                     Click word to edit
                   </span>
                 </div>
 
                 {wordsList.length === 0 ? (
-                  <div className="p-8 text-center border border-dashed border-neutral-200 rounded-xl">
-                    <p className="text-xs text-neutral-400 font-medium">
+                  <div className="p-8 text-center border border-dashed border-[#dfccc1] rounded-2xl bg-[#fffdfb]">
+                    <p className="text-xs text-[#82301c]/70 font-medium">
                       No words added to this collection yet. Use the form to add your first word!
                     </p>
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1.5">
+                  <div className="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
                     {wordsList.map((word, idx) => {
                       const isSelected = selectedWord?.id === word.id;
                       const isDeleting = deletingId === word.id;
@@ -281,30 +274,30 @@ const WordsManagementModal = memo(function WordsManagementModal({
                         <div
                           key={word.id || idx}
                           onClick={() => handleSelectWord(word)}
-                          className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start justify-between gap-3 ${
+                          className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-start justify-between gap-3 ${
                             isSelected
-                              ? "bg-sky-50/80 border-sky-400 ring-2 ring-sky-300/40 shadow-xs"
-                              : "bg-white border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50/80"
+                              ? "bg-[#f5e9e2] border-[#82301c] ring-2 ring-[#82301c]/20 shadow-xs"
+                              : "bg-[#fffdfb] border-[#dfccc1] hover:border-[#82301c]/50 hover:bg-[#f5e9e2]/40"
                           }`}
                         >
                           <div className="flex flex-col gap-1 min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-neutral-800 truncate">
+                              <span className="text-sm font-bold text-[#82301c] truncate">
                                 {word.term}
                               </span>
-                              <span className="text-xs text-sky-700 font-semibold truncate">
+                              <span className="text-xs text-[#d97757] font-bold truncate">
                                 = {word.meaning}
                               </span>
                             </div>
 
                             {word.example && (
-                              <p className="text-[11px] text-neutral-500 italic truncate">
+                              <p className="text-[11px] text-[#5c4a44] italic truncate font-medium">
                                 &quot;{word.example}&quot;
                               </p>
                             )}
 
                             {word.note && (
-                              <p className="text-[10px] text-neutral-400 truncate">
+                              <p className="text-[10px] text-[#82301c]/70 truncate font-medium">
                                 Note: {word.note}
                               </p>
                             )}
@@ -330,16 +323,16 @@ const WordsManagementModal = memo(function WordsManagementModal({
               </div>
 
               {/* Right Column: React Hook Form (5 cols) */}
-              <div className="lg:col-span-5 p-5 flex flex-col gap-4 bg-neutral-50/50">
-                <div className="flex items-center justify-between border-b border-neutral-200/80 pb-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-sky-700">
+              <div className="lg:col-span-5 p-5 flex flex-col gap-4 bg-[#f5e9e2]/30">
+                <div className="flex items-center justify-between border-b border-[#dfccc1] pb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#82301c]">
                     {selectedWord ? "Edit Selected Word" : "Add New Word"}
                   </h4>
                   {selectedWord && (
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="text-[11px] font-semibold text-rose-600 hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
                     >
                       Cancel Edit
                     </button>
@@ -349,20 +342,18 @@ const WordsManagementModal = memo(function WordsManagementModal({
                 <form onSubmit={handleSubmit(handleCreateWord)} className="flex flex-col gap-3.5">
                   {/* Term */}
                   <div className="flex flex-col gap-1">
-                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
-                      Term (Vocabulary)
+                    <label className="text-xs font-bold text-[#82301c]">
+                      Term (Vocabulary) <span className="text-rose-500">*</span>
                     </label>
                     <input
                       id="word-term-input"
                       type="text"
                       placeholder="e.g. Bonjour"
-                      className={`h-9 px-3 border ${
-                        errors.term ? designTokens.colors.border.error : designTokens.colors.border.default
-                      } ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      className="h-9 px-3 border border-[#dfccc1] rounded-xl text-xs outline-none focus:border-[#82301c] bg-[#fffdfb] text-[#82301c] transition font-medium"
                       {...register("term", { required: "Term is required" })}
                     />
                     {errors.term && (
-                      <p className={`text-[11px] ${designTokens.colors.text.error}`}>
+                      <p className="text-[11px] font-semibold text-rose-600">
                         {errors.term.message}
                       </p>
                     )}
@@ -370,20 +361,18 @@ const WordsManagementModal = memo(function WordsManagementModal({
 
                   {/* Meaning */}
                   <div className="flex flex-col gap-1">
-                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
-                      Meaning / Translation
+                    <label className="text-xs font-bold text-[#82301c]">
+                      Meaning / Translation <span className="text-rose-500">*</span>
                     </label>
                     <input
                       id="word-meaning-input"
                       type="text"
                       placeholder="e.g. Hello / Good day"
-                      className={`h-9 px-3 border ${
-                        errors.meaning ? designTokens.colors.border.error : designTokens.colors.border.default
-                      } ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      className="h-9 px-3 border border-[#dfccc1] rounded-xl text-xs outline-none focus:border-[#82301c] bg-[#fffdfb] text-[#82301c] transition font-medium"
                       {...register("meaning", { required: "Meaning is required" })}
                     />
                     {errors.meaning && (
-                      <p className={`text-[11px] ${designTokens.colors.text.error}`}>
+                      <p className="text-[11px] font-semibold text-rose-600">
                         {errors.meaning.message}
                       </p>
                     )}
@@ -391,58 +380,58 @@ const WordsManagementModal = memo(function WordsManagementModal({
 
                   {/* Example */}
                   <div className="flex flex-col gap-1">
-                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                    <label className="text-xs font-bold text-[#82301c]">
                       Example Usage (Optional)
                     </label>
                     <input
                       id="word-example-input"
                       type="text"
                       placeholder="e.g. Bonjour tout le monde!"
-                      className={`h-9 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      className="h-9 px-3 border border-[#dfccc1] rounded-xl text-xs outline-none focus:border-[#82301c] bg-[#fffdfb] text-[#82301c] transition font-medium"
                       {...register("example")}
                     />
                   </div>
 
                   {/* Note */}
                   <div className="flex flex-col gap-1">
-                    <label className={`text-xs font-semibold ${designTokens.colors.text.primary}`}>
+                    <label className="text-xs font-bold text-[#82301c]">
                       Note / Context (Optional)
                     </label>
                     <input
                       id="word-note-input"
                       type="text"
                       placeholder="e.g. Formal greeting"
-                      className={`h-9 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-xs outline-none ${designTokens.colors.border.focus} bg-white transition`}
+                      className="h-9 px-3 border border-[#dfccc1] rounded-xl text-xs outline-none focus:border-[#82301c] bg-[#fffdfb] text-[#82301c] transition font-medium"
                       {...register("note")}
                     />
                   </div>
 
                   {/* Buttons */}
-                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-neutral-200">
+                  <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#dfccc1]">
                     {selectedWord ? (
                       /* Update Mode: Button type="button" */
                       <button
                         type="button"
                         disabled={isSubmitting}
                         onClick={handleUpdateWord}
-                        className={`w-full py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5`}
+                        className="w-full py-2.5 text-xs font-bold bg-[#82301c] hover:bg-[#6c2716] text-white rounded-xl shadow-md shadow-[#82301c]/20 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
-                        Update Word
+                        <span>Update Word</span>
                       </button>
                     ) : (
                       /* Add Mode: Button type="submit" */
                       <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`w-full py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5`}
+                        className="w-full py-2.5 text-xs font-bold bg-[#82301c] hover:bg-[#6c2716] text-white rounded-xl shadow-md shadow-[#82301c]/20 transition cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                         </svg>
-                        Add Word
+                        <span>Add Word</span>
                       </button>
                     )}
                   </div>
