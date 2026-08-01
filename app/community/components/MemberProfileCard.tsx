@@ -201,10 +201,9 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
 
       {/* Ratings Received List Section */}
       <motion.div
-        key={`ratings-${profile.id}`}
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
         className={`p-6 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-4`}
       >
         <div className={`flex items-center justify-between border-b ${designTokens.colors.border.default} pb-3`}>
@@ -219,16 +218,11 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
         </div>
 
         {ratingsReceived.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]"
-          >
+          <div className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]">
             <p className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
               No ratings received yet for this member.
             </p>
-          </motion.div>
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             <AnimatePresence mode="wait">
@@ -247,11 +241,11 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                 return (
                   <motion.div
                     key={ratingItem.id || idx}
-                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -12, scale: 0.98 }}
-                    transition={{ duration: 0.25, ease: "easeOut" }}
-                    className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs hover:border-[#82301c]/40 transition-colors"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2 }}
+                    className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -260,14 +254,9 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
                         </span>
                         <div className="flex items-center text-[#d97757] text-xs">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <motion.span
-                              key={star}
-                              initial={{ scale: 0.8 }}
-                              animate={{ scale: 1 }}
-                              transition={{ duration: 0.15, delay: star * 0.03 }}
-                            >
+                            <span key={star}>
                               {star <= (ratingItem.rating || 0) ? "★" : "☆"}
-                            </motion.span>
+                            </span>
                           ))}
                         </div>
                         <span className="text-xs font-bold text-[#82301c]">

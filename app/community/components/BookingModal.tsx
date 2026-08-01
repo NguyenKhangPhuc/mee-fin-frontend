@@ -23,6 +23,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SlotUncheckedCreateInput } from "@/app/types";
 import { designTokens } from "@/app/constants/design-tokens";
 
+import { parseUtcDate } from "./helpers";
+
 interface BookingModalProps {
   slot: SlotUncheckedCreateInput | null;
   hostName: string;
@@ -35,7 +37,7 @@ interface BookingModalProps {
  *
  * BEHAVIORAL MECHANISM:
  * Uses AnimatePresence to animate the backdrop blur and dialog card when slot is non-null.
- * Shows formatted start and end times, duration, and room ID. On confirmation, calls onConfirm.
+ * Shows formatted start and end times in user's local timezone, duration, and room ID. On confirmation, calls onConfirm.
  */
 const BookingModal = memo(function BookingModal({
   slot,
@@ -100,7 +102,7 @@ const BookingModal = memo(function BookingModal({
               <div className="flex items-center justify-between gap-2">
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>Start Time</span>
                 <span className={`text-xs font-bold text-[#82301c] text-right`}>
-                  {new Date(slot.startTime).toLocaleString([], {
+                  {parseUtcDate(slot.startTime).toLocaleString([], {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
@@ -113,7 +115,7 @@ const BookingModal = memo(function BookingModal({
               <div className="flex items-center justify-between gap-2">
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>End Time</span>
                 <span className={`text-xs font-bold text-[#82301c] text-right`}>
-                  {new Date(slot.endTime).toLocaleString([], {
+                  {parseUtcDate(slot.endTime).toLocaleString([], {
                     weekday: "short",
                     month: "short",
                     day: "numeric",

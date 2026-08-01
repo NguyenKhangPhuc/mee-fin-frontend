@@ -70,6 +70,30 @@ export const getStatusBadgeStyle = (status: SlotStatus): string => {
 };
 
 /**
+ * parseUtcDate
+ *
+ * Safely parses UTC string dates returned by API/Database and converts them to
+ * proper local JavaScript Date objects in the user's local browser timezone.
+ */
+export const parseUtcDate = (dateVal: string | Date | undefined | null): Date => {
+  if (!dateVal) return new Date();
+  if (dateVal instanceof Date) return dateVal;
+
+  let str = String(dateVal).trim();
+  if (!str) return new Date();
+
+  // Replace space separator with T
+  str = str.replace(" ", "T");
+
+  // If string does not specify timezone offset (Z or +hh:mm or -hh:mm), append Z for UTC
+  const hasTimezone = /Z|[+-]\d{2}:?\d{2}$/i.test(str);
+  const normalized = hasTimezone ? str : `${str}Z`;
+
+  const parsed = new Date(normalized);
+  return isNaN(parsed.getTime()) ? new Date(dateVal) : parsed;
+};
+
+/**
  * checkIsMeetingAvailable
  *
  * BEHAVIORAL MECHANISM:
@@ -87,9 +111,9 @@ export const getStatusBadgeStyle = (status: SlotStatus): string => {
 export const checkIsMeetingAvailable = (slot: SlotUncheckedCreateInput): boolean => {
   if (!slot.startTime) return false;
   const now = new Date().getTime();
-  const startTimeMs = new Date(slot.startTime).getTime();
+  const startTimeMs = parseUtcDate(slot.startTime).getTime();
   const endTimeMs = slot.endTime
-    ? new Date(slot.endTime).getTime()
+    ? parseUtcDate(slot.endTime).getTime()
     : startTimeMs + (slot.durationMinutes || 30) * 60000;
 
   return now >= startTimeMs - 5 * 60 * 1000 && now <= endTimeMs;
@@ -102,7 +126,7 @@ export const checkIsMeetingAvailable = (slot: SlotUncheckedCreateInput): boolean
  * Merges provided and exchanged slot arrays into a Map keyed by slot ID to
  * deduplicate any overlap. Then iterates the Map to construct FullCalendar
  * event objects, deriving color from slot status and computing a fallback
- * endTime when one is not explicitly set.
+ * endTime when one is not explicitly set. Converts UTC timestamps into user's local timezone.
  *
  * PARAMETERS:
  * - provideSlots (SlotUncheckedCreateInput[]): Slots owned by the current user.
@@ -130,9 +154,9 @@ export const buildCalendarEvents = (
   const events: CalendarEvent[] = [];
 
   allSlotsMap.forEach(({ slot, isOwner }) => {
-    const startTime = new Date(slot.startTime);
+    const startTime = parseUtcDate(slot.startTime);
     const endTime = slot.endTime
-      ? new Date(slot.endTime)
+      ? parseUtcDate(slot.endTime)
       : new Date(startTime.getTime() + (slot.durationMinutes || 30) * 60000);
 
     const status =

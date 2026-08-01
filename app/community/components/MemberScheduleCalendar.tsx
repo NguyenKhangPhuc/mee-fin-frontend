@@ -18,7 +18,6 @@
 "use client";
 
 import React, { memo } from "react";
-import { motion } from "framer-motion";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -44,7 +43,6 @@ const getCurrentTimeString = () => {
  *
  * BEHAVIORAL MECHANISM:
  * Renders FullCalendar with timeGridWeek view and slotDuration="00:05:00".
- * Wrapped in Framer Motion motion.div for smooth entrance transitions on load and member switch.
  * Automatically focuses and scrolls directly to current time indicator line.
  * Wrapped in React.memo to ensure optimal performance.
  */
@@ -73,13 +71,7 @@ const MemberScheduleCalendar = memo(function MemberScheduleCalendar({
   }, [currentTimeString]);
 
   return (
-    <motion.div
-      key={memberName}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
-      className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}
-    >
+    <div className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}>
       {/* Calendar Header & Legend */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-4`}>
         <div>
@@ -105,10 +97,7 @@ const MemberScheduleCalendar = memo(function MemberScheduleCalendar({
       </div>
 
       {/* FullCalendar Component */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.99 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.25, delay: 0.1 }}
+      <div
         ref={containerRef}
         className="fullcalendar-custom-wrapper max-h-[650px] overflow-y-auto rounded-xl border border-[#dfccc1] p-3 bg-[#fffdfb] shadow-xs [&_.fc-button-primary]:!bg-[#82301c] [&_.fc-button-primary]:!border-[#6c2716] [&_.fc-button-primary:hover]:!bg-[#6c2716] [&_.fc-button-primary:disabled]:!bg-[#dfccc1] [&_.fc-toolbar-title]:!text-[#82301c] [&_.fc-toolbar-title]:!font-bold [&_.fc-col-header-cell]:!bg-[#f8ede6] [&_.fc-col-header-cell]:!text-[#82301c] [&_.fc-col-header-cell]:!py-2 [&_.fc-now-indicator-line]:!border-[#82301c] [&_.fc-now-indicator-line]:!border-2 [&_.fc-now-indicator-arrow]:!border-l-[#82301c] [&_.fc-theme-standard_td]:!border-[#dfccc1] [&_.fc-theme-standard_th]:!border-[#dfccc1] [&_.fc-theme-standard]:!border-[#dfccc1]"
       >
@@ -132,8 +121,8 @@ const MemberScheduleCalendar = memo(function MemberScheduleCalendar({
           selectable={false}
           editable={false}
         />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 });
 

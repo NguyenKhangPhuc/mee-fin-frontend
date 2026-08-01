@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SlotUncheckedCreateInput } from "@/app/types";
 import { SlotStatus } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
-import { getStatusBadgeStyle, checkIsMeetingAvailable } from "./helpers";
+import { getStatusBadgeStyle, checkIsMeetingAvailable, parseUtcDate } from "./helpers";
 
 interface SlotDetailModalProps {
   detail: {
@@ -80,13 +80,17 @@ const SlotDetailModal = memo(function SlotDetailModal({
             </div>
 
             {/* Read-only Slot Info */}
-            <div className="flex flex-col gap-3.5 bg-[#f8ede6] p-4 rounded-xl border border-[#dfccc1]">
+            <div className="flex flex-col gap-3.5 bg-neutral-50/80 p-4 rounded-xl border border-neutral-100">
               <div className="flex items-center justify-between gap-2">
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
                   My Role
                 </span>
                 <span
-                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border bg-[#f5e9e2] text-[#82301c] border-[#dfccc1]`}
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${
+                    detail.isOwner
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-sky-50 text-sky-700 border-sky-200"
+                  }`}
                 >
                   {detail.isOwner ? "Host / Owner (Provided)" : "Participant (Exchanged)"}
                 </span>
@@ -107,8 +111,8 @@ const SlotDetailModal = memo(function SlotDetailModal({
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
                   Start Time
                 </span>
-                <span className="text-xs font-bold text-[#82301c] text-right">
-                  {new Date(detail.slot.startTime).toLocaleString([], {
+                <span className="text-xs font-medium text-neutral-700 text-right">
+                  {parseUtcDate(detail.slot.startTime).toLocaleString([], {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
@@ -122,8 +126,8 @@ const SlotDetailModal = memo(function SlotDetailModal({
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
                   End Time
                 </span>
-                <span className="text-xs font-bold text-[#82301c] text-right">
-                  {new Date(detail.slot.endTime).toLocaleString([], {
+                <span className="text-xs font-medium text-neutral-700 text-right">
+                  {parseUtcDate(detail.slot.endTime).toLocaleString([], {
                     weekday: "short",
                     month: "short",
                     day: "numeric",
@@ -137,7 +141,7 @@ const SlotDetailModal = memo(function SlotDetailModal({
                 <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
                   Duration
                 </span>
-                <span className="text-xs font-bold text-[#82301c]">
+                <span className="text-xs font-bold text-neutral-800">
                   {detail.slot.durationMinutes} mins
                 </span>
               </div>
@@ -147,7 +151,7 @@ const SlotDetailModal = memo(function SlotDetailModal({
                   <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
                     Room ID
                   </span>
-                  <span className="font-mono text-[11px] text-[#61514d] truncate max-w-[180px]">
+                  <span className="font-mono text-[11px] text-neutral-600 truncate max-w-[180px]">
                     {detail.slot.id}
                   </span>
                 </div>
@@ -159,7 +163,7 @@ const SlotDetailModal = memo(function SlotDetailModal({
               <button
                 type="button"
                 onClick={onClose}
-                className={`px-4 py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonSecondary} ${designTokens.colors.text.buttonSecondary} border ${designTokens.colors.border.default} ${designTokens.radii.button} hover:bg-[#ebdcd3] transition cursor-pointer`}
+                className={`px-4 py-2.5 text-xs font-semibold ${designTokens.colors.bg.buttonSecondary} ${designTokens.colors.text.buttonSecondary} border ${designTokens.colors.border.default} ${designTokens.radii.button} hover:bg-neutral-100 transition cursor-pointer`}
               >
                 Close
               </button>
@@ -191,7 +195,7 @@ const SlotDetailModal = memo(function SlotDetailModal({
                     type="button"
                     disabled={!checkIsMeetingAvailable(detail.slot)}
                     onClick={() => onGoToMeeting(detail.slot.id!)}
-                    className="px-5 py-2.5 text-xs font-semibold text-white bg-[#82301c] hover:bg-[#6c2716] rounded-xl shadow-md shadow-[#82301c]/20 transition cursor-pointer disabled:bg-[#dfccc1] disabled:text-[#9c8c87] disabled:shadow-none disabled:cursor-not-allowed flex items-center gap-1.5"
+                    className="px-5 py-2.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition cursor-pointer disabled:bg-neutral-300 disabled:text-neutral-500 disabled:cursor-not-allowed flex items-center gap-1.5"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -204,7 +208,7 @@ const SlotDetailModal = memo(function SlotDetailModal({
                     Go to the meeting
                   </button>
                   {!checkIsMeetingAvailable(detail.slot) && (
-                    <span className="text-[10px] text-[#9c8c87] font-medium">
+                    <span className="text-[10px] text-neutral-400 font-medium">
                       Available 5 mins before start time
                     </span>
                   )}
