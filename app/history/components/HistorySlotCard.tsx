@@ -2,19 +2,11 @@
  * PURPOSE:
  * Renders an individual meeting slot card in the History page, displaying meeting status,
  * title, date/time, duration, provide/exchange languages, participant display names (Host & Guest),
- * both user-given rating and received partner rating, and rating management controls.
- * Wrapped in React.memo for high performance.
+ * both user-given rating and received partner rating (with star counts & feedback quotes), and rating management controls.
+ * Redesigned to match the #82301c theme token design system and status badge helpers.
  *
  * CONTEXT/PARENT FILE:
  * Rendered by app/history/HistoryClient.tsx.
- *
- * INPUTS / PARAMETERS:
- * - slot (SlotUncheckedCreateInput, Required): The meeting slot data.
- * - index (number, Required): Position index used for Framer Motion stagger delay calculation.
- * - currentUserId (string, Required): Currently logged in user ID.
- * - onRate (function, Required): Callback invoked to open the RatingModal for a new rating.
- * - onEditRating (function, Required): Callback invoked to open RatingModal for editing a rating.
- * - onDeleteRating (function, Required): Callback invoked to open delete rating confirmation dialog.
  */
 
 "use client";
@@ -24,7 +16,7 @@ import { motion } from "framer-motion";
 import { SlotUncheckedCreateInput } from "@/app/types/slot";
 import { SlotRatingUncheckedCreateInput } from "@/app/types/ratings";
 import { SlotStatus } from "@/app/types/enum";
-import { designTokens } from "@/app/constants/design-tokens";
+import { getStatusBadgeStyle, parseUtcDate } from "./helpers";
 
 interface HistorySlotCardProps {
   slot: SlotUncheckedCreateInput;
@@ -43,13 +35,7 @@ interface HistorySlotCardProps {
  *
  * BEHAVIORAL MECHANISM:
  * Renders slot details including status badge, host and guest display names, languages, time, and dual ratings.
- * Displays displayName for both given rating and received rating.
- *
- * PARAMETERS:
- * - props (HistorySlotCardProps): Contains slot item, current user ID, and action callbacks.
- *
- * RETURNS:
- * - JSX.Element: The slot history card element.
+ * Displays partner rating received and user rating given with filled star icons (★/☆) and feedback quotes.
  */
 const HistorySlotCard = memo(function HistorySlotCard({
   slot,
@@ -62,8 +48,8 @@ const HistorySlotCard = memo(function HistorySlotCard({
   const isHost = slot.ownerId === currentUserId;
 
   // Participant Display Names
-  const hostName = slot.owner?.fullName || slot.owner?.fullName || slot.owner?.email || "Host";
-  const guestName = slot.exchangeUser?.fullName || slot.exchangeUser?.fullName || slot.exchangeUser?.email || "Guest / Unbooked";
+  const hostName = slot.owner?.fullName || slot.owner?.email || "Host";
+  const guestName = slot.exchangeUser?.fullName || slot.exchangeUser?.email || "Guest / Unbooked";
   const partnerName = isHost ? guestName : hostName;
 
   // Rating Given by Current User for Partner
@@ -76,201 +62,207 @@ const HistorySlotCard = memo(function HistorySlotCard({
     (r) => r.raterId !== currentUserId
   );
 
-  const status = slot.status || SlotStatus.OPEN;
-  let statusBadgeStyle = "bg-neutral-100 text-neutral-600 border-neutral-200";
-  if (status === SlotStatus.COMPLETED) {
-    statusBadgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-200";
-  } else if (status === SlotStatus.BOOKED) {
-    statusBadgeStyle = "bg-sky-50 text-sky-700 border-sky-200";
-  } else if (status === SlotStatus.CANCELLED) {
-    statusBadgeStyle = "bg-rose-50 text-rose-700 border-rose-200";
-  }
+  // Extract numerical star values safely supporting rating / stars property names
+  const givenRatingStars = givenRating?.rating ?? (givenRating as any)?.stars ?? 0;
+  const receivedRatingStars = receivedRating?.rating ?? (receivedRating as any)?.stars ?? 0;
 
+  const status = (slot.status as SlotStatus) || SlotStatus.OPEN;
+  const statusBadgeStyle = getStatusBadgeStyle(status);
+
+  const parsedStart = parseUtcDate(slot.startTime);
   const startDateStr = slot.startTime
-    ? new Date(slot.startTime).toLocaleDateString([], {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
+    ? parsedStart.toLocaleDateString([], {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
     : "N/A";
 
   const startTimeStr = slot.startTime
-    ? new Date(slot.startTime).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-    : "N/A";
-
-  const isCompleted = status === SlotStatus.COMPLETED;
+    ? parsedStart.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
       transition={{ duration: 0.22, delay: Math.min(index * 0.04, 0.3), ease: "easeOut" }}
-      className={`p-6 ${designTokens.colors.bg.card} ${designTokens.radii.card} ${designTokens.shadows.card} border ${designTokens.colors.border.default} flex flex-col justify-between gap-5 transition-all duration-200 hover:shadow-lg relative overflow-hidden`}
+      className="p-5 sm:p-6 bg-[#fcf7f3] rounded-3xl border border-[#dfccc1] shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-4 font-sans select-none"
     >
-      {/* Top Slot Info Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md border ${statusBadgeStyle}`}>
+      {/* Top Header Row: Status Badge & Role Badge */}
+      <div className="flex items-center justify-between gap-3 border-b border-[#dfccc1]/60 pb-3.5">
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border ${statusBadgeStyle}`}>
             {status}
           </span>
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200">
-            {isHost ? "Role: Host" : "Role: Guest"}
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-lg bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
+            {isHost ? "Host" : "Participant"}
           </span>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500">
-          <svg className="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className="flex items-center gap-1.5 text-xs text-[#82301c]/80 font-bold">
+          <svg className="w-4 h-4 text-[#d97757]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <span>{startDateStr} at {startTimeStr} ({slot.durationMinutes || 30} mins)</span>
+          <span>{startDateStr}</span>
+          {startTimeStr && <span>• {startTimeStr}</span>}
         </div>
       </div>
 
-      {/* Main Content Body */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-2.5 min-w-0 flex-1">
-          <h3 className={`text-lg font-bold ${designTokens.colors.text.primary} truncate`}>
+      {/* Middle Section: Slot Title & Participants Info */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+        {/* Left: Title & Languages (7 cols) */}
+        <div className="md:col-span-7 flex flex-col gap-2">
+          <h3 className="text-base sm:text-lg font-bold text-[#82301c] line-clamp-1">
             {slot.title}
           </h3>
 
-          {/* Participant Display Names */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-neutral-600">
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Host:</span>
-              <span className="font-bold text-neutral-800">{hostName}</span>
-            </div>
-            <span className="text-neutral-300">•</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-neutral-400">Guest:</span>
-              <span className="font-bold text-neutral-800">{guestName}</span>
-            </div>
-          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#5c4a44]">
+            <span className="flex items-center gap-1 bg-[#fffdfb] px-2.5 py-1 rounded-lg border border-[#dfccc1]">
+              <span className="text-[10px] text-[#82301c]/60 font-bold uppercase">Provide:</span>
+              <span className="text-[#82301c] font-bold">{slot.provideLanguage?.name || "N/A"}</span>
+            </span>
 
-          {/* Language Preferences Badges */}
-          <div className="flex flex-wrap items-center gap-3 text-xs mt-1">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <span className="font-semibold">Provide:</span>
-              <span>{slot.provideLanguage?.name || "Language"}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-50 text-sky-700 border border-sky-200">
-              <span className="font-semibold">Exchange:</span>
-              <span>{slot.exchangeLanguage?.name || "Language"}</span>
-            </div>
+            <span className="text-[#82301c]/40">↔</span>
+
+            <span className="flex items-center gap-1 bg-[#fffdfb] px-2.5 py-1 rounded-lg border border-[#dfccc1]">
+              <span className="text-[10px] text-[#82301c]/60 font-bold uppercase">Exchange:</span>
+              <span className="text-[#82301c] font-bold">{slot.exchangeLanguage?.name || "N/A"}</span>
+            </span>
+
+            <span className="text-[#82301c]/40">•</span>
+
+            <span className="text-[#82301c] font-bold">
+              {slot.durationMinutes || 30} mins
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Partner & Host Info (5 cols) - Transparent Background */}
+        <div className="md:col-span-5 flex items-center justify-start md:justify-end gap-3 p-3 rounded-2xl border border-[#dfccc1]/60">
+          <div className="w-9 h-9 rounded-full bg-[#82301c]/15 text-[#82301c] border border-[#82301c]/30 flex items-center justify-center font-bold text-sm uppercase shrink-0">
+            {partnerName.charAt(0)}
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[10px] font-bold uppercase text-[#82301c]/70 tracking-wider">
+              {isHost ? "Guest Partner" : "Host Partner"}
+            </span>
+            <span className="text-xs font-bold text-[#82301c] truncate">
+              {partnerName}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Ratings Section Footer */}
-      <div className="flex flex-col gap-3.5 pt-4 border-t border-neutral-100 bg-neutral-50/60 p-4 rounded-xl">
+      {/* Bottom Section: Dual Ratings Display & Rating Actions */}
+      <div className="pt-3 border-t border-[#dfccc1]/60 flex flex-col gap-3">
         {/* 1. GIVEN RATING (Your Rating for Partner) */}
-        <div className="flex flex-col gap-2">
-          {givenRating ? (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-white border border-neutral-200/80">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-neutral-700">
-                    Your Rating for <span className="text-sky-700">{partnerName}</span> (as <span className="text-amber-700 font-semibold">{givenRating.displayName || "You"}</span>):
-                  </span>
-                  <div className="flex items-center text-amber-400 text-sm">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <span key={star}>
-                        {star <= (givenRating.rating || 0) ? "★" : "☆"}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="text-xs font-bold text-amber-600">
-                    ({givenRating.rating}/5)
-                  </span>
+        {givenRating ? (
+          <div className="p-3.5 rounded-2xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex flex-col gap-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-bold text-[#82301c]">
+                  Your Rating for <span className="text-[#d97757] font-bold">{partnerName}</span> (as <span className="text-[#82301c] font-semibold">{givenRating.displayName || "You"}</span>):
+                </span>
+                <div className="flex items-center text-[#d97757] text-sm">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <span key={star}>
+                      {star <= givenRatingStars ? "★" : "☆"}
+                    </span>
+                  ))}
                 </div>
-                {givenRating.feedback && (
-                  <p className="text-xs text-neutral-600 italic">
-                    &quot;{givenRating.feedback}&quot;
-                  </p>
-                )}
+                <span className="text-xs font-bold text-[#d97757]">
+                  ({givenRatingStars}/5)
+                </span>
               </div>
+              {givenRating.feedback && (
+                <p className="text-xs text-[#5c4a44] italic font-medium">
+                  &quot;{givenRating.feedback}&quot;
+                </p>
+              )}
+            </div>
 
-              {/* Action Buttons for Rating: Edit & Delete */}
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            {/* Action Buttons for Given Rating: Edit & Delete */}
+            <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+              <button
+                type="button"
+                onClick={() => onEditRating(slot, givenRating)}
+                className="px-3 py-1.5 text-xs font-bold bg-[#ede0d7] text-[#82301c] border border-[#dfccc1] rounded-xl hover:bg-[#dfccc1]/50 transition cursor-pointer flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                <span>Edit</span>
+              </button>
+
+              {givenRating.id && (
                 <button
                   type="button"
-                  onClick={() => onEditRating(slot, givenRating)}
-                  className={`px-3 py-1.5 text-xs font-semibold ${designTokens.colors.bg.buttonSecondary} ${designTokens.colors.text.buttonSecondary} border ${designTokens.colors.border.default} ${designTokens.radii.button} hover:bg-neutral-100 transition cursor-pointer flex items-center gap-1`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Edit
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => givenRating.id && onDeleteRating(slot.id!, givenRating.id)}
-                  className="px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                  onClick={() => onDeleteRating(slot.id!, givenRating.id!)}
+                  className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition cursor-pointer flex items-center gap-1"
+                  title="Delete Rating"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
-                  Delete
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white border border-neutral-200/80">
-              <span className="text-xs text-neutral-500 font-medium">
-                {isCompleted
-                  ? `You have not rated ${partnerName} yet.`
-                  : "Rating is available after the meeting is completed."}
-              </span>
-              {isCompleted && (
-                <button
-                  type="button"
-                  onClick={() => onRate(slot)}
-                  className={`px-3.5 py-1.5 text-xs font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} ${designTokens.shadows.button} hover:opacity-95 transition cursor-pointer flex items-center gap-1.5 shrink-0`}
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Rate {partnerName}
+                  <span>Delete</span>
                 </button>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#fffdfb] border border-[#dfccc1]">
+            <span className="text-xs text-[#82301c]/70 font-semibold italic">
+              {status === SlotStatus.COMPLETED
+                ? `You have not rated ${partnerName} yet.`
+                : "Rating is available after the meeting is completed."}
+            </span>
+            {status === SlotStatus.COMPLETED && (
+              <button
+                type="button"
+                onClick={() => onRate(slot)}
+                className="px-3.5 py-1.5 text-xs font-bold bg-[#82301c] hover:bg-[#6c2716] text-white rounded-xl shadow-sm transition cursor-pointer flex items-center gap-1.5 shrink-0"
+              >
+                <span className="text-[#d97757]">★</span>
+                <span>Rate {partnerName}</span>
+              </button>
+            )}
+          </div>
+        )}
 
         {/* 2. RECEIVED RATING (Partner's Rating for You) */}
-        {isCompleted && (
-          <div className="p-3 rounded-lg bg-sky-50/50 border border-sky-100 flex flex-col gap-1">
+        {status === SlotStatus.COMPLETED && (
+          <div className="p-3.5 rounded-2xl bg-[#f5e9e2]/60 border border-[#dfccc1] flex flex-col gap-1">
             {receivedRating ? (
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-sky-900">
-                    <span className="font-extrabold text-sky-800">{receivedRating.displayName || partnerName}</span>&apos;s Rating for You:
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-[#82301c]">
+                    <span className="font-extrabold">{receivedRating.displayName || partnerName}</span>&apos;s Rating for You:
                   </span>
-                  <div className="flex items-center text-amber-400 text-sm">
+                  <div className="flex items-center text-[#d97757] text-sm">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <span key={star}>
-                        {star <= (receivedRating.rating || 0) ? "★" : "☆"}
+                        {star <= receivedRatingStars ? "★" : "☆"}
                       </span>
                     ))}
                   </div>
-                  <span className="text-xs font-bold text-amber-600">
-                    ({receivedRating.rating}/5)
+                  <span className="text-xs font-bold text-[#d97757]">
+                    ({receivedRatingStars}/5)
                   </span>
                 </div>
                 {receivedRating.feedback && (
-                  <p className="text-xs text-sky-950 italic">
+                  <p className="text-xs text-[#5c4a44] italic font-medium">
                     &quot;{receivedRating.feedback}&quot;
                   </p>
                 )}
               </div>
             ) : (
-              <span className="text-xs text-sky-700/80 font-medium">
-                {partnerName} has not rated this meeting yet.
+              <span className="text-xs text-[#82301c]/60 font-semibold italic">
+                No rating received from partner yet.
               </span>
             )}
           </div>

@@ -18,7 +18,7 @@ import HistoryClient from "./HistoryClient";
 export default async function HistoryPage() {
   const [{ data: currentUser }, { data: slotsResponse }] = await Promise.all([
     getUser(),
-    getAllUserSlots({ page: 1, limit: 10 }),
+    getAllUserSlots({ page: 1, limit: 5 }),
   ]);
 
   return (
@@ -29,7 +29,7 @@ export default async function HistoryPage() {
         slotsResponse?.meta || {
           total: 0,
           page: 1,
-          limit: 10,
+          limit: 5,
           totalPages: 1,
           hasNextPage: false,
           hasPrevPage: false,

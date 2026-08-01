@@ -92,7 +92,7 @@ export default function HistoryClient({
       const queryStatus = status === "ALL" ? undefined : status;
       const { data: res, error } = await getAllUserSlots({
         page,
-        limit: 10,
+        limit: 5,
         status: queryStatus,
         order,
       });
@@ -197,7 +197,6 @@ export default function HistoryClient({
           feedback: formData.feedback,
           displayName: formData.displayName,
         });
-
         setIsOpenLoader(false);
 
         if (error || !updated) {
@@ -205,7 +204,6 @@ export default function HistoryClient({
           return;
         }
 
-        // Update local state
         setSlotsList((prev) =>
           prev.map((s) => {
             if (s.id !== ratingSlot.id) return s;
@@ -223,7 +221,6 @@ export default function HistoryClient({
             return { ...s, slotRatings: updatedRatings };
           })
         );
-
         showNotification("Rating updated successfully!", "success");
       } else {
         // Create Mode
@@ -235,7 +232,6 @@ export default function HistoryClient({
           feedback: formData.feedback,
           displayName: formData.displayName,
         });
-
         setIsOpenLoader(false);
 
         if (error || !created) {
@@ -252,7 +248,6 @@ export default function HistoryClient({
           displayName: formData.displayName,
         };
 
-        // Update local state
         setSlotsList((prev) =>
           prev.map((s) => {
             if (s.id !== ratingSlot.id) return s;
@@ -262,7 +257,6 @@ export default function HistoryClient({
             };
           })
         );
-
         showNotification("Rating submitted successfully!", "success");
       }
 
@@ -285,47 +279,47 @@ export default function HistoryClient({
   const handleConfirmDeleteRating = useCallback(async () => {
     if (!deletingTarget) return;
 
+    const { slotId, ratingId } = deletingTarget;
+    setDeletingTarget(null);
     setIsOpenLoader(true);
     const { error } = await deleteRating({
-      id: deletingTarget.ratingId,
-      slotId: deletingTarget.slotId,
+      id: ratingId,
+      slotId: slotId
     });
     setIsOpenLoader(false);
 
     if (error) {
-      showNotification(error || "Failed to delete rating.", "error");
+      showNotification(error, "error");
       return;
     }
 
-    // Remove rating from local state
     setSlotsList((prev) =>
       prev.map((s) => {
-        if (s.id !== deletingTarget.slotId) return s;
+        if (s.id !== slotId) return s;
         return {
           ...s,
-          slotRatings: (s.slotRatings || []).filter((r) => r.id !== deletingTarget.ratingId),
+          slotRatings: (s.slotRatings || []).filter((r) => r.id !== ratingId),
         };
       })
     );
 
-    setDeletingTarget(null);
-    showNotification("Rating deleted successfully.", "success");
+    showNotification("Rating deleted successfully!", "success");
   }, [deletingTarget, setIsOpenLoader, showNotification]);
 
   return (
-    <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
-      <div className="max-w-7xl mx-auto flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-10 bg-[#f4ebe4] font-sans select-none">
+      <div className="max-w-6xl mx-auto flex flex-col gap-6">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#dfccc1] pb-6">
           <div>
-            <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#82301c]">
               Meeting History
             </h1>
-            <p className={`text-xs sm:text-sm mt-1 ${designTokens.colors.text.secondary}`}>
+            <p className="text-xs sm:text-sm mt-1 text-[#82301c]/80 font-medium">
               Review past language exchange slots, manage ratings, and feedback
             </p>
           </div>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sky-100 text-sky-700 self-start sm:self-auto">
+          <span className="text-xs font-bold px-3.5 py-1.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1] self-start sm:self-auto">
             Total Slots: {totalCount}
           </span>
         </div>
@@ -340,12 +334,12 @@ export default function HistoryClient({
 
         {/* Slots List */}
         {slotsList.length === 0 ? (
-          <div className={`p-12 text-center ${designTokens.colors.bg.card} ${designTokens.radii.card} border ${designTokens.colors.border.default}`}>
-            <svg className="w-12 h-12 mx-auto text-neutral-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="p-12 text-center bg-[#fcf7f3] rounded-3xl border border-[#dfccc1] shadow-xs">
+            <svg className="w-12 h-12 mx-auto text-[#82301c]/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className={`text-sm font-semibold ${designTokens.colors.text.primary}`}>No meeting slots found</p>
-            <p className={`text-xs mt-1 ${designTokens.colors.text.secondary}`}>Try clearing or changing your status filter</p>
+            <p className="text-sm font-bold text-[#82301c]">No meeting slots found</p>
+            <p className="text-xs mt-1 text-[#5c4a44] font-medium">Try clearing or changing your status filter</p>
           </div>
         ) : (
           <div className="flex flex-col gap-5">

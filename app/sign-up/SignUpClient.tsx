@@ -89,8 +89,8 @@ export default function SignUpClient() {
       const { data: signupData, error } = await signupService(formData);
       if (error || !signupData) {
         setServerError(
-          error?.response?.data?.message || "Sign up failed. Please try again."
-        );
+          error
+        )
         return;
       }
       alert("Sign up successfully!");
@@ -147,9 +147,8 @@ export default function SignUpClient() {
             Display Name
           </label>
           <div
-            className={`border ${
-              errors.displayName ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.displayName ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <UserIcon />
             <input
@@ -181,9 +180,8 @@ export default function SignUpClient() {
             Email
           </label>
           <div
-            className={`border ${
-              errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <EmailIcon />
             <input
@@ -211,9 +209,8 @@ export default function SignUpClient() {
             Password
           </label>
           <div
-            className={`border ${
-              errors.password ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.password ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <PasswordIcon />
             <input
