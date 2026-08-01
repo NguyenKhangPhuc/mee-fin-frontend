@@ -108,7 +108,7 @@ export default function NavBar({ initialUser }: NavbarProps) {
     >
       {/* Brand Header */}
       <div className="mb-8 flex items-center gap-3 px-2">
-        <div className="w-9 h-9 rounded-xl bg-neutral-900 flex items-center justify-center text-white font-bold text-lg">
+        <div className="w-9 h-9 rounded-xl bg-[#82301c] flex items-center justify-center text-white font-bold text-lg shadow-md shadow-[#82301c]/20">
           M
         </div>
         <div className="flex flex-col">
@@ -150,11 +150,11 @@ export default function NavBar({ initialUser }: NavbarProps) {
         {initialUser ? (
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-3 px-2">
-              <div className="w-8 h-8 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-800 font-semibold text-xs uppercase">
+              <div className="w-8 h-8 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#e8deda] flex items-center justify-center font-bold text-xs uppercase shadow-xs">
                 {initialUser.displayName?.charAt(0) || initialUser.email.charAt(0)}
               </div>
               <div className="flex flex-col overflow-hidden">
-                <span className={`text-sm font-medium truncate ${designTokens.colors.text.primary}`}>
+                <span className={`text-sm font-semibold truncate ${designTokens.colors.text.primary}`}>
                   {initialUser.displayName || "User"}
                 </span>
                 <span className={`text-xs truncate ${designTokens.colors.text.muted}`}>
@@ -182,9 +182,9 @@ export default function NavBar({ initialUser }: NavbarProps) {
           </Link>
         )}
 
-        <div className="mt-4 flex items-center gap-2 px-2 text-xs text-neutral-400">
+        <div className={`mt-4 flex items-center gap-2 px-2 text-xs ${designTokens.colors.text.muted}`}>
           <span
-            className={`w-2 h-2 rounded-full ${initialUser ? "bg-emerald-500 animate-pulse" : "bg-neutral-300"
+            className={`w-2 h-2 rounded-full ${initialUser ? "bg-emerald-500 animate-pulse" : "bg-[#9c8c87]"
               }`}
           />
           <span>{initialUser ? "Authenticated" : "Guest Mode"}</span>

@@ -19,6 +19,7 @@ import { SlotFormInput } from "./types";
 interface CreateSlotModalProps {
   isOpen: boolean;
   isLoading: boolean;
+  selectedDateRange?: { start: Date; end: Date } | null;
   provideLanguageOptions: { id: string; name: string }[];
   allLanguages: LanguageUncheckedCreateInput[];
   defaultProvideLanguageId: string;
@@ -30,6 +31,7 @@ interface CreateSlotModalProps {
 const CreateSlotModal = memo(function CreateSlotModal({
   isOpen,
   isLoading,
+  selectedDateRange,
   provideLanguageOptions,
   allLanguages,
   defaultProvideLanguageId,
@@ -40,6 +42,7 @@ const CreateSlotModal = memo(function CreateSlotModal({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<SlotFormInput>({
     defaultValues: {
@@ -50,6 +53,8 @@ const CreateSlotModal = memo(function CreateSlotModal({
     },
   });
 
+  const watchDuration = watch("durationMinutes", 30);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -58,28 +63,60 @@ const CreateSlotModal = memo(function CreateSlotModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 bg-neutral-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-[#291e1b]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 20 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className={`w-full max-w-md bg-white p-6 ${designTokens.radii.card} shadow-2xl flex flex-col gap-4 border ${designTokens.colors.border.default}`}
+            className={`w-full max-w-md ${designTokens.colors.bg.card} p-6 ${designTokens.radii.card} shadow-2xl flex flex-col gap-4 border ${designTokens.colors.border.default}`}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center pb-2 border-b border-neutral-100">
+            <div className={`flex justify-between items-center pb-3 border-b ${designTokens.colors.border.default}`}>
               <h3 className={`text-lg font-bold ${designTokens.colors.text.primary}`}>
-                Create Slot
+                Create New Slot
               </h3>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-neutral-400 hover:text-neutral-700 text-lg font-bold"
+                className="text-[#9c8c87] hover:text-[#82301c] text-lg font-bold"
               >
                 ✕
               </button>
             </div>
+
+            {/* Selected Time Banner */}
+            {selectedDateRange && (
+              <div className="flex flex-col gap-2 p-3.5 bg-[#f8ede6] border border-[#dfccc1] rounded-xl text-xs shadow-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-[#61514d]">Start Time:</span>
+                  <span className="font-bold text-[#82301c]">
+                    {new Date(selectedDateRange.start).toLocaleString([], {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-[#61514d]">End Time:</span>
+                  <span className="font-bold text-[#82301c]">
+                    {new Date(
+                      new Date(selectedDateRange.start).getTime() + (Number(watchDuration) || 30) * 60000
+                    ).toLocaleString([], {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               {/* Slot Title */}
@@ -90,7 +127,7 @@ const CreateSlotModal = memo(function CreateSlotModal({
                 <input
                   type="text"
                   placeholder="Slot Title"
-                  className={`h-10 px-3 border ${errors.title ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
+                  className={`h-10 px-3 border ${errors.title ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
                   {...register("title", { required: "Title is required" })}
                 />
                 {errors.title && (
@@ -111,7 +148,7 @@ const CreateSlotModal = memo(function CreateSlotModal({
                   </div>
                 ) : (
                   <select
-                    className={`h-10 px-3 border ${errors.provideLanguageId ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none bg-white ${designTokens.colors.border.focus}`}
+                    className={`h-10 px-3 border ${errors.provideLanguageId ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.bg.input} ${designTokens.colors.border.focus}`}
                     {...register("provideLanguageId", { required: "Provide language is required" })}
                   >
                     {provideLanguageOptions.map((opt) => (
@@ -129,7 +166,7 @@ const CreateSlotModal = memo(function CreateSlotModal({
                   Exchange Language (Target language to learn)
                 </label>
                 <select
-                  className={`h-10 px-3 border ${errors.exchangeLanguageId ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none bg-white ${designTokens.colors.border.focus}`}
+                  className={`h-10 px-3 border ${errors.exchangeLanguageId ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.bg.input} ${designTokens.colors.border.focus}`}
                   {...register("exchangeLanguageId", { required: "Exchange language is required" })}
                 >
                   {allLanguages.map((lang) => (
@@ -147,7 +184,7 @@ const CreateSlotModal = memo(function CreateSlotModal({
                 </label>
                 <input
                   type="number"
-                  className={`h-10 px-3 border ${errors.durationMinutes ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
+                  className={`h-10 px-3 border ${errors.durationMinutes ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} text-sm outline-none ${designTokens.colors.border.focus}`}
                   {...register("durationMinutes", {
                     required: "Duration is required",
                     min: { value: 5, message: "Duration must be at least 5 minutes" },
@@ -162,18 +199,18 @@ const CreateSlotModal = memo(function CreateSlotModal({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-2 border-t border-neutral-100">
+              <div className={`flex justify-end gap-3 pt-3 border-t ${designTokens.colors.border.default}`}>
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`px-4 h-10 border ${designTokens.colors.border.default} ${designTokens.radii.button} text-xs font-medium text-neutral-700 hover:bg-neutral-100`}
+                  className={`px-4 h-10 border ${designTokens.colors.border.default} ${designTokens.radii.button} text-xs font-semibold text-[#61514d] hover:bg-[#ebdcd3] transition`}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || provideLanguageOptions.length === 0}
-                  className={`px-4 h-10 ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} text-xs font-medium disabled:opacity-50`}
+                  className={`px-5 h-10 ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} text-xs font-semibold disabled:opacity-50 shadow-md shadow-[#82301c]/20`}
                 >
                   Create Slot
                 </button>

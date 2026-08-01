@@ -185,8 +185,8 @@ export default function LoginClient() {
         </button>
 
         <div className="relative flex items-center justify-center my-3">
-          <div className="border-t border-neutral-200 w-full" />
-          <span className={`absolute px-3 bg-white text-xs ${designTokens.colors.text.muted}`}>
+          <div className={`border-t ${designTokens.colors.border.default} w-full`} />
+          <span className={`absolute px-3 ${designTokens.colors.bg.card} text-xs ${designTokens.colors.text.muted}`}>
             OR
           </span>
         </div>

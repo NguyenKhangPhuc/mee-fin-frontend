@@ -123,9 +123,9 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
   return (
     <div className="xl:hidden w-full font-sans">
       {/* Fixed Header */}
-      <header className={`sticky top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b ${designTokens.colors.border.default} z-40 px-4 flex items-center justify-between`}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white font-bold text-sm">
+      <header className={`sticky top-0 left-0 right-0 h-16 ${designTokens.colors.bg.sidebar}/90 backdrop-blur-md border-b ${designTokens.colors.border.default} z-40 px-4 flex items-center justify-between`}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#82301c] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#82301c]/20">
             M
           </div>
           <span className={`font-bold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
@@ -136,7 +136,7 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Open menu"
-          className="p-2 text-neutral-700 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 transition"
+          className={`p-2 ${designTokens.colors.text.secondary} hover:${designTokens.colors.text.primary} rounded-lg hover:bg-[#f5e9e2] transition`}
         >
           <MenuIcon />
         </button>
@@ -145,20 +145,20 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
       {/* Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-neutral-900/40 backdrop-blur-xs z-50 transition-opacity duration-300"
+          className={`${designTokens.loader.overlay} fixed inset-0 z-50 transition-opacity duration-300`}
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Full Screen Height & Expanded Width Slide-out Drawer */}
       <div
-        className={`fixed top-0 right-0 bottom-0 h-screen w-80 sm:w-96 bg-white border-l ${designTokens.colors.border.default} z-50 p-6 flex flex-col transition-transform duration-300 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 bottom-0 h-screen w-80 sm:w-96 ${designTokens.colors.bg.sidebar} border-l ${designTokens.colors.border.default} z-50 p-6 flex flex-col transition-transform duration-300 shadow-2xl ${isOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-neutral-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-neutral-900 flex items-center justify-center text-white font-bold text-sm">
+        <div className={`flex items-center justify-between mb-6 pb-4 border-b ${designTokens.colors.border.default}`}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#82301c] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#82301c]/20">
               M
             </div>
             <span className={`font-bold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
@@ -168,7 +168,7 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
           <button
             onClick={() => setIsOpen(false)}
             aria-label="Close menu"
-            className="p-1.5 text-neutral-700 hover:text-neutral-900 rounded-lg hover:bg-neutral-100 transition"
+            className={`p-1.5 ${designTokens.colors.text.secondary} hover:${designTokens.colors.text.primary} rounded-lg hover:bg-[#f5e9e2] transition`}
           >
             <CloseIcon />
           </button>
@@ -204,7 +204,7 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
           {initialUser ? (
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3 px-2">
-                <div className="w-9 h-9 rounded-full bg-neutral-200 flex items-center justify-center text-neutral-800 font-semibold text-sm uppercase">
+                <div className="w-9 h-9 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#e8deda] flex items-center justify-center font-bold text-sm uppercase shadow-xs">
                   {initialUser.displayName?.charAt(0) || initialUser.email.charAt(0)}
                 </div>
                 <div className="flex flex-col overflow-hidden">

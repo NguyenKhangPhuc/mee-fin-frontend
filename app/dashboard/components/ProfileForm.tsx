@@ -43,7 +43,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6 w-full">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Full Name */}
         <div className="flex flex-col gap-1.5">
@@ -53,7 +53,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="Enter full name"
-            className={`h-11 px-3.5 border ${errors.fullName ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${errors.fullName ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("fullName", { required: "Full name is required" })}
           />
           {errors.fullName && (
@@ -72,7 +72,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
             type="email"
             value={profile?.email || ""}
             disabled
-            className={`h-11 px-3.5 border border-neutral-200 ${designTokens.radii.input} bg-neutral-100 text-neutral-500 cursor-not-allowed text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} bg-[#ebdcd3]/40 text-[#61514d] cursor-not-allowed text-sm font-medium`}
           />
         </div>
 
@@ -84,7 +84,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="number"
             placeholder="Enter age"
-            className={`h-11 px-3.5 border ${errors.age ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${errors.age ? designTokens.colors.border.error : designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("age", {
               required: "Age is required",
               min: { value: 1, message: "Age must be positive" },
@@ -103,7 +103,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="Enter programme"
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("programme")}
           />
         </div>
@@ -116,7 +116,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="Enter university"
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("university")}
           />
         </div>
@@ -129,7 +129,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="Enter degree"
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("degree")}
           />
         </div>
@@ -142,7 +142,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="https://instagram.com/..."
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("instagram")}
           />
         </div>
@@ -155,20 +155,20 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
           <input
             type="text"
             placeholder="https://facebook.com/..."
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("facebook")}
           />
         </div>
 
         {/* LinkedIn Link */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 md:col-span-2">
           <label className={`text-sm font-semibold ${designTokens.colors.text.primary}`}>
             LinkedIn Profile Link
           </label>
           <input
             type="text"
             placeholder="https://linkedin.com/in/..."
-            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
+            className={`h-11 px-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm`}
             {...register("linkedIn")}
           />
         </div>
@@ -182,7 +182,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
         <textarea
           rows={3}
           placeholder="Tell us a little bit about yourself..."
-          className={`p-3.5 border ${designTokens.colors.border.default} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm resize-y`}
+          className={`p-3.5 border ${designTokens.colors.border.default} ${designTokens.colors.bg.input} ${designTokens.radii.input} outline-none ${designTokens.colors.border.focus} transition text-sm resize-y`}
           {...register("description")}
         />
       </div>
@@ -190,7 +190,7 @@ const ProfileForm = memo(function ProfileForm({ profile, isLoading, onSubmit }: 
       <button
         type="submit"
         disabled={isLoading}
-        className={`self-end px-6 h-11 flex items-center justify-center font-medium ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} transition cursor-pointer disabled:opacity-50 text-sm`}
+        className={`self-end px-6 h-11 flex items-center justify-center font-semibold ${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} ${designTokens.radii.button} transition cursor-pointer disabled:opacity-50 text-sm shadow-md shadow-[#82301c]/20`}
       >
         Save Profile Changes
       </button>

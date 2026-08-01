@@ -57,15 +57,15 @@ export const getProficiencyBadgeStyle = (prof: string): string => {
 export const getStatusBadgeStyle = (status: SlotStatus): string => {
   switch (status) {
     case SlotStatus.OPEN:
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      return "bg-[#d97757]/20 text-[#82301c] border-[#d97757]/40";
     case SlotStatus.BOOKED:
-      return "bg-rose-100 text-rose-800 border-rose-200";
+      return "bg-[#9a3412]/10 text-[#9a3412] border-[#9a3412]/30";
     case SlotStatus.COMPLETED:
-      return "bg-blue-100 text-blue-800 border-blue-200";
+      return "bg-[#5c4a44]/10 text-[#5c4a44] border-[#5c4a44]/30";
     case SlotStatus.CANCELLED:
-      return "bg-neutral-200 text-neutral-800 border-neutral-300";
+      return "bg-[#d6cbc6]/40 text-[#61514d] border-[#dfccc1]";
     default:
-      return "bg-neutral-100 text-neutral-800 border-neutral-200";
+      return "bg-[#ebdcd3] text-[#61514d] border-[#dfccc1]";
   }
 };
 
@@ -139,18 +139,22 @@ export const buildCalendarEvents = (
       (slot.status as SlotStatus) ||
       (slot.exchangeUserId ? SlotStatus.BOOKED : SlotStatus.OPEN);
 
-    let backgroundColor = "#10b981"; // GREEN for OPEN
-    let borderColor = "#059669";
+    let backgroundColor = "#d97757"; // OPEN - Soft Light Terracotta
+    let borderColor = "#82301c";
+    let textColor = "#ffffff";
 
     if (status === SlotStatus.BOOKED) {
-      backgroundColor = "#ef4444"; // RED for BOOKED
-      borderColor = "#dc2626";
+      backgroundColor = "#9a3412"; // BOOKED - Warm Amber Rust
+      borderColor = "#7c2d12";
+      textColor = "#ffffff";
     } else if (status === SlotStatus.COMPLETED) {
-      backgroundColor = "#3b82f6"; // BLUE for COMPLETED
-      borderColor = "#2563eb";
+      backgroundColor = "#5c4a44"; // COMPLETED - Warm Mocha
+      borderColor = "#443632";
+      textColor = "#ffffff";
     } else if (status === SlotStatus.CANCELLED) {
-      backgroundColor = "#6b7280"; // GRAY for CANCELLED
-      borderColor = "#4b5563";
+      backgroundColor = "#d6cbc6"; // CANCELLED - Very Light Soft Clay
+      borderColor = "#927f78";
+      textColor = "#291e1b";
     }
 
     events.push({
@@ -160,7 +164,7 @@ export const buildCalendarEvents = (
       end: endTime,
       backgroundColor,
       borderColor,
-      textColor: "#ffffff",
+      textColor,
       extendedProps: {
         slot,
         isOwner,

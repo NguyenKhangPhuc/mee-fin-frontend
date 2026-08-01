@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4ebe4;
+  --foreground: #291e1b;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 /* Custom sleek scrollbar utility */

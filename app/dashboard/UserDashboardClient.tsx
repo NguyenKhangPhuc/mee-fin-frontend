@@ -420,7 +420,7 @@ export default function UserDashboardClient({
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-200 pb-6"
+          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b ${designTokens.colors.border.default} pb-6`}
         >
           <div>
             <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${designTokens.colors.text.primary}`}>
@@ -437,9 +437,9 @@ export default function UserDashboardClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
-          className={`p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-8`}
+          className={`p-6 sm:p-8 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-6`}
         >
-          <div className="flex flex-col gap-1 border-b border-neutral-100 pb-4">
+          <div className={`flex flex-col gap-1 border-b ${designTokens.colors.border.default} pb-4`}>
             <h2 className={`text-xl font-bold ${designTokens.colors.text.primary}`}>
               Edit Profile
             </h2>
@@ -447,17 +447,25 @@ export default function UserDashboardClient({
               Update your avatar and public information
             </p>
           </div>
-          <AvatarUploader
-            displayAvatar={displayAvatar || null}
-            initials={profile?.fullName?.charAt(0) || profile?.email?.charAt(0) || "U"}
-            isLoading={isOpenLoader}
-            onChange={handleAvatarChange}
-          />
-          <ProfileForm
-            profile={profile}
-            isLoading={isOpenLoader}
-            onSubmit={onProfileSubmit}
-          />
+
+          <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8 lg:gap-12 pt-2">
+            {/* Avatar Column (Left) */}
+            <AvatarUploader
+              displayAvatar={displayAvatar || null}
+              initials={profile?.fullName?.charAt(0) || profile?.email?.charAt(0) || "U"}
+              isLoading={isOpenLoader}
+              onChange={handleAvatarChange}
+            />
+
+            {/* Profile Form Column (Right) */}
+            <div className="flex-1 w-full">
+              <ProfileForm
+                profile={profile}
+                isLoading={isOpenLoader}
+                onSubmit={onProfileSubmit}
+              />
+            </div>
+          </div>
         </motion.div>
 
         {/* User Languages Card Section */}
@@ -495,6 +503,7 @@ export default function UserDashboardClient({
       <CreateSlotModal
         isOpen={isSlotModalOpen}
         isLoading={isOpenLoader}
+        selectedDateRange={selectedDateRange}
         provideLanguageOptions={provideLanguageOptions}
         allLanguages={allLanguages}
         defaultProvideLanguageId={provideLanguageOptions[0]?.id || ""}

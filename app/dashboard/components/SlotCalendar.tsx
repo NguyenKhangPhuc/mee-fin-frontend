@@ -32,11 +32,19 @@ interface SlotCalendarProps {
   onEventClick: (info: any) => void;
 }
 
+const getCurrentTimeString = () => {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}:00`;
+};
+
 /**
  * SlotCalendar
  *
  * BEHAVIORAL MECHANISM:
- * Renders a FullCalendar timeGridWeek view with selectable mode enabled.
+ * Renders a FullCalendar timeGridWeek view with 5-minute slot intervals.
+ * Automatically focuses and scrolls directly to current time indicator without requiring manual scrolling down.
  * Wrapped in React.memo to prevent FullCalendar from performing expensive DOM
  * re-renders when unrelated parent state changes.
  */
@@ -45,10 +53,29 @@ const SlotCalendar = memo(function SlotCalendar({
   onDateSelect,
   onEventClick,
 }: SlotCalendarProps) {
+  const currentTimeString = getCurrentTimeString();
+  const calendarRef = React.useRef<FullCalendar>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    // Focus and scroll directly to current time indicator line automatically on render
+    const scrollNow = () => {
+      const nowLine = containerRef.current?.querySelector(".fc-now-indicator-line");
+      if (nowLine) {
+        nowLine.scrollIntoView({ block: "center", behavior: "auto" });
+      } else if (calendarRef.current) {
+        calendarRef.current.getApi().scrollToTime(currentTimeString);
+      }
+    };
+
+    const timer = setTimeout(scrollNow, 120);
+    return () => clearTimeout(timer);
+  }, [currentTimeString]);
+
   return (
     <>
       {/* Section Header + Status Legend */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-neutral-100 pb-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-4`}>
         <div>
           <h2 className={`text-xl font-bold ${designTokens.colors.text.primary}`}>
             Manage Slots Calendar
@@ -61,30 +88,37 @@ const SlotCalendar = memo(function SlotCalendar({
         {/* Color Status Legend */}
         <div className="flex flex-wrap items-center gap-3.5 text-xs font-medium">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-xs bg-[#10b981]" />
-            <span className="text-neutral-700">OPEN (Green)</span>
+            <span className="w-3 h-3 rounded-full bg-[#d97757] shadow-xs border border-[#82301c]" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>OPEN (Light Terracotta)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-xs bg-[#ef4444]" />
-            <span className="text-neutral-700">BOOKED (Red)</span>
+            <span className="w-3 h-3 rounded-full bg-[#9a3412] shadow-xs" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>BOOKED (Amber Rust)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-xs bg-[#3b82f6]" />
-            <span className="text-neutral-700">COMPLETED (Blue)</span>
+            <span className="w-3 h-3 rounded-full bg-[#5c4a44] shadow-xs" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>COMPLETED (Mocha)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-xs bg-[#6b7280]" />
-            <span className="text-neutral-700">CANCELLED (Gray)</span>
+            <span className="w-3 h-3 rounded-full bg-[#d6cbc6] shadow-xs border border-[#927f78]" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>CANCELLED (Light Clay)</span>
           </div>
         </div>
       </div>
 
       {/* FullCalendar */}
-      <div className="calendar-container max-h-[600px] overflow-y-auto">
+      <div
+        ref={containerRef}
+        className="calendar-container max-h-[650px] overflow-y-auto rounded-xl border border-[#dfccc1] p-3 bg-[#fffdfb] shadow-xs [&_.fc-button-primary]:!bg-[#82301c] [&_.fc-button-primary]:!border-[#6c2716] [&_.fc-button-primary:hover]:!bg-[#6c2716] [&_.fc-button-primary:disabled]:!bg-[#dfccc1] [&_.fc-toolbar-title]:!text-[#82301c] [&_.fc-toolbar-title]:!font-bold [&_.fc-col-header-cell]:!bg-[#f8ede6] [&_.fc-col-header-cell]:!text-[#82301c] [&_.fc-col-header-cell]:!py-2 [&_.fc-now-indicator-line]:!border-[#82301c] [&_.fc-now-indicator-line]:!border-2 [&_.fc-now-indicator-arrow]:!border-l-[#82301c] [&_.fc-theme-standard_td]:!border-[#dfccc1] [&_.fc-theme-standard_th]:!border-[#dfccc1] [&_.fc-theme-standard]:!border-[#dfccc1]"
+      >
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           slotDuration="00:05:00"
+          scrollTime={currentTimeString}
+          scrollTimeReset={false}
+          nowIndicator={true}
           allDaySlot={false}
           headerToolbar={{
             left: "prev,next today",
