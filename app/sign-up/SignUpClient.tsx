@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 import { signupService, githubService } from "@/app/services";
 import { SignUpDto } from "@/app/types/authentication";
 import { designTokens } from "@/app/constants/design-tokens";
+import { useNotification } from "@/app/context/NotificationContext";
 
 function UserIcon() {
+
   return (
     <svg
       className="w-5 h-5 text-neutral-400 shrink-0"
@@ -72,6 +74,7 @@ function GithubIcon() {
 
 export default function SignUpClient() {
   const router = useRouter();
+  const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -93,8 +96,8 @@ export default function SignUpClient() {
         )
         return;
       }
-      alert("Sign up successfully!");
-      router.push("/login");
+      showNotification("Verification code is sent successfully.", "success");
+      router.push(`/sign-up/verify?email=${encodeURIComponent(formData.email)}`);
     } catch (err: unknown) {
       console.error("Sign up error:", err);
       setServerError("Sign up failed. Please try again.");

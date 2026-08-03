@@ -59,3 +59,13 @@ export interface GithubCallbackResponse {
   user?: SafeUser;
   [key: string]: unknown;
 }
+
+export interface VerifyCodeDto {
+  email: string;
+  code: string;
+}
+
+export interface GenerateCodeDto {
+  email: string;
+  code?: string;
+}

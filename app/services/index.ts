@@ -80,7 +80,7 @@ api.interceptors.response.use(
     }
 
     const requestUrl = originalRequest.url || '';
-    if (requestUrl.includes('/auth/refresh') || requestUrl.includes('/auth/login')) {
+    if (requestUrl.includes('/auth/refresh') || requestUrl.includes('/auth/login') || requestUrl.includes('/verification-code')) {
       return Promise.reject(error);
     }
 
@@ -131,4 +131,6 @@ export * from './slots';
 export * from './collections';
 export * from './words';
 export * from './ratings';
+export * from './verification-code';
+
 
