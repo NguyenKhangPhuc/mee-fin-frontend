@@ -1,2 +1,3 @@
 export * from './generate-sign-up-code';
 export * from './verify-sign-up-code';
+export * from './generate-forget-password-code';

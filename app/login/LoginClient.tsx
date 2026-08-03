@@ -174,6 +174,14 @@ export default function LoginClient() {
               {errors.password.message}
             </p>
           )}
+          <div className="flex justify-end mt-1">
+            <Link
+              href="/forget-password"
+              className={`text-xs ${designTokens.colors.text.primary} hover:underline font-semibold`}
+            >
+              Forgot your password?
+            </Link>
+          </div>
         </div>
 
         <button

@@ -5,3 +5,4 @@ export * from './refresh';
 export * from './github';
 export * from './github-callback';
 export * from './user';
+export * from './update-password';

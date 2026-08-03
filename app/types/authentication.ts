@@ -69,3 +69,11 @@ export interface GenerateCodeDto {
   email: string;
   code?: string;
 }
+
+export interface PasswordUpdationDto {
+  email: string;
+  code: string;
+  oldPassword: string;
+  newPassword: string;
+}
+

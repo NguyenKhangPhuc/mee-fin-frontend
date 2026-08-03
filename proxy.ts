@@ -4,7 +4,9 @@ import { EXPIRED_ACCESS_TOKEN } from '@/app/constants/error-code';
 import { ResponseError } from '@/app/types/error';
 
 // Các route KHÔNG cần đăng nhập (public)
-const publicRoutes = ['/login', '/sign-up', '/forgot-password', '/sign-up/verify'];
+const publicRoutes = ['/login', '/sign-up', '/forgot-password', '/sign-up/verify',
+    '/forget-password', '/reset-password'
+];
 
 // Các route CẦN đăng nhập (protected) - có thể dùng cách match ngược lại
 const authRoutes = ['/login', '/register'];
