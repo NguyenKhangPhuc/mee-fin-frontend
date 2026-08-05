@@ -18,6 +18,7 @@ export const signupService = async (
   data: SignUpDto
 ): Promise<{ data: SignupResponse | null; error: string | null }> => {
   try {
+    console.log(data)
     const response = await apiClient.post<SignupResponse>('/auth/signup', data);
     return { data: response.data, error: null };
   } catch (error) {

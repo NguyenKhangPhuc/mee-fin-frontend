@@ -16,6 +16,7 @@ export interface SignUpDto {
   displayName: string;
   email: string;
   password: string;
+  timezone: string;
 }
 
 // Alias SignupDto for consistency

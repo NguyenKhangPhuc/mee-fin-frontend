@@ -4,9 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { loginService, githubService } from "@/app/services";
+import { loginService, githubService, generateSignUpCodeService } from "@/app/services";
 import { LoginDto } from "@/app/types/authentication";
 import { designTokens } from "@/app/constants/design-tokens";
+import { USER_NOT_VERIFIED } from "@/app/constants/error-code";
+import { useNotification } from "@/app/context/NotificationContext";
 
 function EmailIcon() {
   return (
@@ -54,22 +56,34 @@ function GithubIcon() {
 
 export default function LoginClient() {
   const router = useRouter();
+  const { showNotification } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [isGithubLoading, setIsGithubLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isNotVerified, setIsNotVerified] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors },
   } = useForm<LoginDto>();
 
   const onLoginSubmit = async (data: LoginDto) => {
     setIsLoading(true);
     setServerError(null);
+    setIsNotVerified(false);
     try {
-      const response = await loginService(data);
-      console.log("Login successful:", response);
+      const { data: resData, error, errorCode } = await loginService(data);
+      if (error) {
+        setServerError(error);
+        if (errorCode === USER_NOT_VERIFIED) {
+          setIsNotVerified(true);
+        }
+        return;
+      }
+      console.log("Login successful:", resData);
       router.push("/");
       router.refresh();
     } catch (err: unknown) {
@@ -81,6 +95,31 @@ export default function LoginClient() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyAccount = async () => {
+    const email = getValues("email");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !email.trim() || !emailRegex.test(email)) {
+      setServerError("Please enter a valid email address to verify your account.");
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const { error } = await generateSignUpCodeService({ email });
+      if (error) {
+        setServerError(error);
+        return;
+      }
+      showNotification("Verification code is sent successfully.", "success");
+      router.push(`/sign-up/verify?email=${encodeURIComponent(email)}`);
+    } catch (err: unknown) {
+      console.error("Generate sign up code error:", err);
+      setServerError("Failed to send verification code. Please try again.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -114,7 +153,17 @@ export default function LoginClient() {
 
         {serverError && (
           <div className="p-3 text-sm rounded-xl bg-red-50 text-red-600 border border-red-200">
-            {serverError}
+            <div>{serverError}</div>
+            {isNotVerified && (
+              <button
+                type="button"
+                onClick={handleVerifyAccount}
+                disabled={isVerifying}
+                className="mt-2 text-sm font-semibold text-[#82301c] hover:underline cursor-pointer disabled:opacity-50 block"
+              >
+                {isVerifying ? "Sending code..." : "Verify your account?"}
+              </button>
+            )}
           </div>
         )}
 

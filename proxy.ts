@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     let response = NextResponse.next({ request });
 
-    const accessToken = request.cookies.get('access_token')?.value;
+    let accessToken = request.cookies.get('access_token')?.value;
     const refreshToken = request.cookies.get('refresh_token')?.value;
 
     const isPublicRoute = publicRoutes.includes(pathname);
@@ -50,6 +50,7 @@ export async function proxy(request: NextRequest) {
                             // Ghi cookie mới vào request -> Server Component phía sau đọc được ngay
                             parsed.forEach(({ name, value }) => {
                                 request.cookies.set(name, value);
+                                if (name === 'access_token') accessToken = value;
                             });
                             response = NextResponse.next({ request });
 
@@ -62,6 +63,7 @@ export async function proxy(request: NextRequest) {
                         // refresh_token cũng hết hạn/revoked -> xoá cookie, coi như logout
                         response.cookies.delete('access_token');
                         response.cookies.delete('refresh_token');
+                        accessToken = undefined;
 
                         if (!isPublicRoute) {
                             const loginUrl = new URL('/login', request.url);
@@ -69,8 +71,12 @@ export async function proxy(request: NextRequest) {
                             return NextResponse.redirect(loginUrl);
                         }
                     }
+                } else if (userRes.status === 401) {
+                    // Token bị vô hiệu hóa (server restart, session bị hủy, secret thay đổi) -> xóa cookie ngay lập tức
+                    response.cookies.delete('access_token');
+                    response.cookies.delete('refresh_token');
+                    accessToken = undefined;
                 }
-                // Các lỗi 401 khác (không phải EXPIRED_ACCESS_TOKEN) -> bỏ qua, để route tự xử lý
             }
             // userRes.ok -> access_token còn hạn, không cần refresh
         } catch {
@@ -79,8 +85,7 @@ export async function proxy(request: NextRequest) {
         }
     }
 
-    // ===== Logic redirect gốc của bạn, giữ nguyên =====
-    const hasValidAccessToken = !!request.cookies.get('access_token')?.value; // đọc lại vì có thể vừa được refresh ở trên
+    const hasValidAccessToken = !!accessToken;
 
     // TH1: Chưa đăng nhập (không có token) mà cố vào route cần bảo vệ
     if (!hasValidAccessToken && !isPublicRoute) {
@@ -89,7 +94,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
     }
 
-    // TH2: Đã đăng nhập (có token) mà cố vào trang login/register
+    // TH2: Đã đăng nhập (có token hợp lệ) mà cố vào trang login/register
     if (hasValidAccessToken && isAuthRoute) {
         return NextResponse.redirect(new URL('/', request.url));
     }

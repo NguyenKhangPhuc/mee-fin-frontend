@@ -16,14 +16,19 @@ const formatErrorString = (msg: any, fallback: string): string => {
 
 export const loginService = async (
   data: LoginDto
-): Promise<{ data: LoginResponse | null; error: string | null }> => {
+): Promise<{ data: LoginResponse | null; error: string | null; errorCode?: string }> => {
   try {
     const response = await apiClient.post<LoginResponse>('/auth/login', data);
     return { data: response.data, error: null };
   } catch (error) {
     if (axios.isAxiosError<ResponseError>(error)) {
-      return { data: null, error: formatErrorString(error.response?.data?.message, "Failed to login") };
+      return {
+        data: null,
+        error: formatErrorString(error.response?.data?.message, "Failed to login"),
+        errorCode: error.response?.data?.code,
+      };
     }
     return { data: null, error: "Failed to login" };
   }
 };
+

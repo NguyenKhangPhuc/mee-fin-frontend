@@ -1,7 +1,7 @@
 /**
  * PURPOSE:
  * Renders the global notification popup toast at the bottom right.
- * Redesigned to strictly adhere to design-tokens and match app aesthetics.
+ * Redesigned to strictly adhere to design-tokens, with smooth Framer Motion animations.
  *
  * CONTEXT/PARENT FILE:
  * Mounted globally in root layout wrappers to display success, error, or info alerts.
@@ -12,13 +12,12 @@
 
 'use client';
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useNotification, NotificationType } from "../context/NotificationContext";
 import { designTokens } from "../constants/design-tokens";
 
 const NotificationCard = () => {
   const { notification, setNotification } = useNotification();
-  console.log(notification)
-  if (!notification.isOpen) return null;
 
   const currentType: NotificationType = notification.type || 'info';
   const style = designTokens.notification[currentType] || designTokens.notification.info;
@@ -45,6 +44,18 @@ const NotificationCard = () => {
     );
   };
 
+  const getBadgeText = (type: NotificationType): string => {
+    switch (type) {
+      case 'success':
+        return 'SUCCESS';
+      case 'error':
+        return 'ERROR';
+      case 'info':
+      default:
+        return 'NOTICE';
+    }
+  };
+
   const getDisplayText = (content: any): string => {
     if (!content) return "Operation updated.";
     if (typeof content === "string") return content;
@@ -60,41 +71,49 @@ const NotificationCard = () => {
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[100] pointer-events-none transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-      <div
-        className={`${style.bg} border ${style.border} ${designTokens.shadows.card} ${designTokens.radii.toast} p-4 flex items-center justify-between gap-3.5 max-w-sm w-full pointer-events-auto relative overflow-hidden select-none`}
-      >
-        {/* Left vertical accent line */}
-        <div className={`absolute left-0 top-0 bottom-0 w-[3.5px] ${style.accent}`} />
+    <AnimatePresence>
+      {notification.isOpen && (
+        <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 z-[100] pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 420, damping: 26 }}
+            className={`${style.bg} border ${style.border} ${designTokens.shadows.card} ${designTokens.radii.toast} p-4 flex items-center justify-between gap-3.5 max-w-sm sm:max-w-md w-full pointer-events-auto relative overflow-hidden select-none backdrop-blur-xs`}
+          >
+            {/* Left vertical accent line */}
+            <div className={`absolute left-0 top-0 bottom-0 w-[3.5px] ${style.accent}`} />
 
-        {/* Status Icon */}
-        <div className={`flex shrink-0 items-center justify-center w-8 h-8 rounded-lg border ${style.iconBg}`}>
-          {renderIcon()}
+            {/* Status Icon */}
+            <div className={`flex shrink-0 items-center justify-center w-8 h-8 rounded-lg border ${style.iconBg}`}>
+              {renderIcon()}
+            </div>
+
+            {/* Alert Content */}
+            <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-1">
+              <span className={`font-mono text-[9px] font-bold uppercase tracking-wider leading-none ${style.badge}`}>
+                {getBadgeText(currentType)}
+              </span>
+              <p className={`text-xs font-medium leading-relaxed break-words select-text ${style.text}`}>
+                {getDisplayText(notification.content)}
+              </p>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={() => setNotification({ ...notification, isOpen: false })}
+              type="button"
+              aria-label="Close notification"
+              className={`flex shrink-0 items-center justify-center w-6 h-6 rounded-lg transition cursor-pointer ${style.closeBtn}`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </motion.div>
         </div>
-
-        {/* Alert Content */}
-        <div className="flex flex-col gap-0.5 flex-1 min-w-0 pr-1">
-          <span className={`font-mono text-[9px] font-bold uppercase tracking-wider leading-none ${style.badge}`}>
-            {currentType}_NOTIFICATION
-          </span>
-          <p className={`text-xs font-medium leading-relaxed break-words select-text ${style.text}`}>
-            {getDisplayText(notification.content)}
-          </p>
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={() => setNotification({ ...notification, isOpen: false })}
-          type="button"
-          aria-label="Close notification"
-          className="flex shrink-0 items-center justify-center w-6 h-6 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition cursor-pointer"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 

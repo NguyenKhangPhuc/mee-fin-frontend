@@ -89,6 +89,8 @@ export default function SignUpClient() {
     setIsLoading(true);
     setServerError(null);
     try {
+      formData.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      console.log(Intl.DateTimeFormat().resolvedOptions().timeZone, formData)
       const { data: signupData, error } = await signupService(formData);
       if (error || !signupData) {
         setServerError(
