@@ -15,7 +15,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, memo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProfileWithScore } from "@/app/types/profile";
 import { designTokens } from "@/app/constants/design-tokens";
@@ -32,7 +32,7 @@ interface MemberProfileCardProps {
  * Renders the profile header card with avatar, average rating badge (rating_avg), social links,
  * academic info grid, and description.
  * Beneath the profile header, renders a client-side paginated list of ratingsReceived,
- * showing each rater's displayName, star rating, feedback comment, and date.
+ * supporting star-rating filtering (5, 4, 3, 2, 1) and chronological sorting (Newest/Oldest).
  *
  * PARAMETERS:
  * - props (MemberProfileCardProps): Selected member profile object.
@@ -49,26 +49,58 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
     () => profile.ratingsReceived || [],
     [profile.ratingsReceived]
   );
-  console.log(profile)
+
+  // Filter & Sort State for Ratings Received
+  const [starFilter, setStarFilter] = useState<string>("ALL");
+  const [sortOrder, setSortOrder] = useState<"NEWEST" | "OLDEST">("NEWEST");
 
   // Client-side pagination for ratingsReceived list
   const [ratingsPage, setRatingsPage] = useState<number>(1);
   const ratingsLimit = 2;
 
-  // Reset ratings page when profile changes
+  // Reset ratings page & filters when profile changes
   useEffect(() => {
     setRatingsPage(1);
+    setStarFilter("ALL");
+    setSortOrder("NEWEST");
   }, [profile.id]);
 
+  const filteredAndSortedRatings = useMemo(() => {
+    let list = [...ratingsReceived];
+
+    if (starFilter !== "ALL") {
+      const targetStar = Number(starFilter);
+      list = list.filter((r) => r.rating === targetStar);
+    }
+
+    list.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return sortOrder === "NEWEST" ? timeB - timeA : timeA - timeB;
+    });
+
+    return list;
+  }, [ratingsReceived, starFilter, sortOrder]);
+
   const totalRatingsPages = useMemo(
-    () => Math.ceil(ratingsReceived.length / ratingsLimit) || 1,
-    [ratingsReceived.length, ratingsLimit]
+    () => Math.ceil(filteredAndSortedRatings.length / ratingsLimit) || 1,
+    [filteredAndSortedRatings.length, ratingsLimit]
   );
 
   const currentPaginatedRatings = useMemo(() => {
     const start = (ratingsPage - 1) * ratingsLimit;
-    return ratingsReceived.slice(start, start + ratingsLimit);
-  }, [ratingsReceived, ratingsPage, ratingsLimit]);
+    return filteredAndSortedRatings.slice(start, start + ratingsLimit);
+  }, [filteredAndSortedRatings, ratingsPage, ratingsLimit]);
+
+  const handleStarFilterChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStarFilter(e.target.value);
+    setRatingsPage(1);
+  }, []);
+
+  const handleSortOrderChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOrder(e.target.value as "NEWEST" | "OLDEST");
+    setRatingsPage(1);
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -206,21 +238,51 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
         transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
         className={`p-6 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-4`}
       >
-        <div className={`flex items-center justify-between border-b ${designTokens.colors.border.default} pb-3`}>
+        {/* Section Header with Select Filters */}
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-3`}>
           <div className="flex items-center gap-2">
             <h3 className={`text-base font-bold ${designTokens.colors.text.primary}`}>
               Received Ratings & Reviews
             </h3>
             <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
-              {ratingsReceived.length}
+              {filteredAndSortedRatings.length}
             </span>
+          </div>
+
+          {/* Select Dropdown Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Star Filter Select */}
+            <select
+              value={starFilter}
+              onChange={handleStarFilterChange}
+              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
+            >
+              <option value="ALL">All Stars</option>
+              <option value="5">★ 5 Stars</option>
+              <option value="4">★ 4 Stars</option>
+              <option value="3">★ 3 Stars</option>
+              <option value="2">★ 2 Stars</option>
+              <option value="1">★ 1 Star</option>
+            </select>
+
+            {/* Sort Order Select */}
+            <select
+              value={sortOrder}
+              onChange={handleSortOrderChange}
+              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
+            >
+              <option value="NEWEST">Newest First</option>
+              <option value="OLDEST">Oldest First</option>
+            </select>
           </div>
         </div>
 
-        {ratingsReceived.length === 0 ? (
+        {filteredAndSortedRatings.length === 0 ? (
           <div className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]">
             <p className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
-              No ratings received yet for this member.
+              {starFilter !== "ALL"
+                ? `No ${starFilter}-star ratings found for this member.`
+                : "No ratings received yet for this member."}
             </p>
           </div>
         ) : (
