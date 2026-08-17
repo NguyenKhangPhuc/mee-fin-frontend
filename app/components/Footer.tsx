@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  href="/#features"
+                  href="/about"
                   className={`${designTokens.colors.text.secondary} hover:${designTokens.colors.text.primary} transition-colors`}
                 >
                   About
