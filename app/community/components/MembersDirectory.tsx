@@ -62,14 +62,22 @@ const MembersDirectory = memo(function MembersDirectory({
   onPageChange,
 }: MembersDirectoryProps) {
   return (
-    <div className="lg:col-span-4 flex flex-col justify-between gap-3">
-      <div className="flex flex-col gap-3">
-        <span className={`text-xs font-bold uppercase tracking-wider ${designTokens.colors.text.muted} px-1`}>
-          Members ({total > 0 ? total : profiles.length})
-        </span>
+    <div
+      className={`lg:col-span-4 ${designTokens.colors.bg.card} border ${designTokens.colors.border.default} ${designTokens.radii.card} ${designTokens.shadows.card} p-4 sm:p-5 flex flex-col justify-between h-[580px] lg:h-[calc(100vh-160px)] lg:sticky lg:top-6`}
+    >
+      <div className="flex flex-col flex-1 min-h-0">
+        {/* Header Title with Border Bottom */}
+        <div className={`pb-3 border-b ${designTokens.colors.border.default} flex items-center justify-between`}>
+          <span className={`text-xs font-bold uppercase tracking-wider ${designTokens.colors.text.muted}`}>
+            Members Directory
+          </span>
+          <span className="text-[11px] font-bold text-[#82301c] bg-[#f8ede6] border border-[#dfccc1] px-2 py-0.5 rounded-full">
+            {total > 0 ? total : profiles.length} {total === 1 ? "member" : "members"}
+          </span>
+        </div>
 
         {/* Scrollable Members List Container */}
-        <div className="flex flex-col gap-2.5 h-[580px] max-h-[calc(100vh-260px)] overflow-y-auto pr-1.5 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-1.5 my-3 custom-scrollbar flex flex-col gap-2.5">
           <AnimatePresence initial={false}>
             {profiles.map((p) => {
               const isSelected = selectedProfileId === p.id;
@@ -89,7 +97,7 @@ const MembersDirectory = memo(function MembersDirectory({
                   whileTap={{ scale: 0.99 }}
                   onClick={() => onSelectProfile(p.id)}
                   type="button"
-                  className={`w-full text-left p-4 ${designTokens.radii.card} border transition-all flex items-center gap-3.5 cursor-pointer ${
+                  className={`w-full text-left p-3.5 ${designTokens.radii.card} border transition-all flex items-center gap-3.5 cursor-pointer ${
                     isSelected
                       ? "bg-[#f8ede6] border-[#82301c] shadow-sm ring-1 ring-[#82301c]/30"
                       : `${designTokens.colors.bg.card} ${designTokens.colors.border.default} hover:bg-[#f5e9e2]`
@@ -143,13 +151,15 @@ const MembersDirectory = memo(function MembersDirectory({
         </div>
       </div>
 
-      {/* Reusable Pagination Component */}
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={onPageChange}
-        disabled={isLoading}
-      />
+      {/* Pinned Pagination Footer */}
+      <div className={`pt-3 border-t ${designTokens.colors.border.default}`}>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          disabled={isLoading}
+        />
+      </div>
     </div>
   );
 });

@@ -18,7 +18,7 @@ import CommunityClient from "./CommunityClient";
 export default async function CommunityPage() {
   const [{ data: currentUser }, { data: profilesResponse }] = await Promise.all([
     getUser(),
-    getAllUserProfileWithLanguagesAndSlots({ page: 1, limit: 5 }),
+    getAllUserProfileWithLanguagesAndSlots({ page: 1, limit: 10 }),
   ]);
 
 

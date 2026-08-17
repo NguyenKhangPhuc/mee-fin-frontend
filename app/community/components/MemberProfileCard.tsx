@@ -53,7 +53,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
 
   // Client-side pagination for ratingsReceived list
   const [ratingsPage, setRatingsPage] = useState<number>(1);
-  const ratingsLimit = 1;
+  const ratingsLimit = 2;
 
   // Reset ratings page when profile changes
   useEffect(() => {
@@ -224,62 +224,64 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <AnimatePresence mode="wait">
-              {currentPaginatedRatings.map((ratingItem, idx) => {
-                const raterDisplayName =
-                  ratingItem.displayName ||
-                  "Anonymous User";
-                const createdDateStr = ratingItem.createdAt
-                  ? new Date(ratingItem.createdAt).toLocaleDateString([], {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })
-                  : "";
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              <AnimatePresence mode="wait">
+                {currentPaginatedRatings.map((ratingItem, idx) => {
+                  const raterDisplayName =
+                    ratingItem.displayName ||
+                    "Anonymous User";
+                  const createdDateStr = ratingItem.createdAt
+                    ? new Date(ratingItem.createdAt).toLocaleDateString([], {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                    : "";
 
-                return (
-                  <motion.div
-                    key={ratingItem.id || idx}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -6 }}
-                    transition={{ duration: 0.2 }}
-                    className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#82301c]">
-                          {raterDisplayName}
-                        </span>
-                        <div className="flex items-center text-[#d97757] text-xs">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span key={star}>
-                              {star <= (ratingItem.rating || 0) ? "★" : "☆"}
-                            </span>
-                          ))}
+                  return (
+                    <motion.div
+                      key={ratingItem.id || idx}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.2 }}
+                      className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-[#82301c]">
+                            {raterDisplayName}
+                          </span>
+                          <div className="flex items-center text-[#d97757] text-xs">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <span key={star}>
+                                {star <= (ratingItem.rating || 0) ? "★" : "☆"}
+                              </span>
+                            ))}
+                          </div>
+                          <span className="text-xs font-bold text-[#82301c]">
+                            ({ratingItem.rating}/5)
+                          </span>
                         </div>
-                        <span className="text-xs font-bold text-[#82301c]">
-                          ({ratingItem.rating}/5)
-                        </span>
+
+                        {createdDateStr && (
+                          <span className={`text-[11px] ${designTokens.colors.text.muted} font-medium`}>
+                            {createdDateStr}
+                          </span>
+                        )}
                       </div>
 
-                      {createdDateStr && (
-                        <span className={`text-[11px] ${designTokens.colors.text.muted} font-medium`}>
-                          {createdDateStr}
-                        </span>
+                      {ratingItem.feedback && (
+                        <p className={`text-xs ${designTokens.colors.text.secondary} italic pl-1`}>
+                          &quot;{ratingItem.feedback}&quot;
+                        </p>
                       )}
-                    </div>
-
-                    {ratingItem.feedback && (
-                      <p className={`text-xs ${designTokens.colors.text.secondary} italic pl-1`}>
-                        &quot;{ratingItem.feedback}&quot;
-                      </p>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
 
             {/* Client-Side Pagination Controls for Ratings Received */}
             <Pagination

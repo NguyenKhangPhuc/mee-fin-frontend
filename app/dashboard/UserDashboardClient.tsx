@@ -412,8 +412,8 @@ export default function UserDashboardClient({
   }, []);
 
   return (
-    <div className={`min-h-screen p-4 sm:p-6 lg:p-10 ${designTokens.colors.bg.page} font-sans relative`}>
-      <div className="max-w-7xl mx-auto flex flex-col gap-8">
+    <div className={`min-h-screen px-3 sm:px-6 lg:px-8 py-6 ${designTokens.colors.bg.page} font-sans relative`}>
+      <div className="w-full max-w-[1800px] mx-auto flex flex-col gap-8">
 
         {/* Page Header */}
         <motion.div
