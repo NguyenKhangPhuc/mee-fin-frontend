@@ -4,6 +4,7 @@ import "./globals.css";
 import { LoaderProvider } from "./context/LoaderContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import NavbarServer from "./components/NavbarServer";
+import Footer from "./components/Footer";
 import { designTokens } from "./constants/design-tokens";
 
 import NotificationCard from "./components/NotificationCard";
@@ -20,8 +21,27 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MEE-FINS - Financial Portal",
-  description: "MEE-FINS Application",
+  title: "MeeFins - Peer-to-Peer Language Exchange & Slot Booking",
+  description:
+    "Faster way to learn a new language. Book 1-on-1 language exchange slots with one click, join real-time video rooms, store custom vocabulary decks, and rate learning partners.",
+  keywords: [
+    "Language Exchange",
+    "Slot Booking",
+    "Learn Languages",
+    "LiveKit Video Room",
+    "Vocabulary Decks",
+    "Flashcards",
+    "Peer-to-Peer Learning",
+    "MeeFins",
+  ],
+  authors: [{ name: "Phuc Nguyen", url: "mailto:Phuc.Nguyen@student.oulu.fi" }],
+  openGraph: {
+    title: "MeeFins - Peer-to-Peer Language Exchange & Slot Booking",
+    description:
+      "Faster way to learn a new language. Book 1-on-1 language exchange slots with one click, join real-time video rooms, and practice vocabulary decks.",
+    siteName: "MeeFins",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -42,6 +62,7 @@ export default function RootLayout({
             <NavbarServer />
             <div className="flex-grow flex flex-col min-w-0 xl:pl-72 transition-all duration-300">
               <main className="flex-1 flex flex-col">{children}</main>
+              <Footer />
             </div>
             <NotificationCard />
             <Loader />
