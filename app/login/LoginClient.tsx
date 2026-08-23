@@ -127,7 +127,8 @@ export default function LoginClient() {
     setIsGithubLoading(true);
     setServerError(null);
     try {
-      window.location.href = "http://localhost:3001/auth/github";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      window.location.href = `${apiUrl}/auth/github`;
     } catch (err: unknown) {
       console.error("Github login error:", err);
       setServerError("Failed to initialize Github login.");

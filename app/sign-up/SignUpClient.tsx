@@ -116,7 +116,8 @@ export default function SignUpClient() {
       if (resData?.url) {
         window.location.href = resData.url;
       } else {
-        window.location.href = "http://localhost:3001/auth/github";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        window.location.href = `${apiUrl}/auth/github`;
       }
     } catch (err: unknown) {
       console.error("Github login error:", err);
