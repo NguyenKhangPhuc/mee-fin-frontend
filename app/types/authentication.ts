@@ -1,3 +1,5 @@
+import { UserRole } from "./enum";
+
 export type SafeUser = {
   id: string;
   displayName: string | null;
@@ -5,6 +7,7 @@ export type SafeUser = {
   confirmationAt: Date | string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
+  role: UserRole
 };
 
 export interface LoginDto {

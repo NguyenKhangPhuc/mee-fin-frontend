@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutService } from "@/app/services/auth/logout";
 import { SafeUser } from "@/app/types/authentication";
+import { UserRole, USER_ROLE } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
 
 function HomeIcon() {
@@ -55,6 +56,14 @@ function HistoryIcon() {
   );
 }
 
+function LanguageIcon() {
+  return (
+    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,6 +97,13 @@ export default function NavBar({ initialUser }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(initialUser?.role === UserRole.ADMIN
+      ? [{ title: "Language Management", link: "/language-management", icon: LanguageIcon }]
+      : []),
+  ];
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -126,7 +142,7 @@ export default function NavBar({ initialUser }: NavbarProps) {
         <div className={`text-xs font-semibold uppercase tracking-wider mb-2 px-3 ${designTokens.colors.text.muted}`}>
           Navigation
         </div>
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const isActive = pathname === item.link;
           const Icon = item.icon;
           return (

@@ -131,5 +131,7 @@ export * from './collections';
 export * from './words';
 export * from './ratings';
 export * from './verification-code';
+export * from './language';
+
 
 

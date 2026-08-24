@@ -4,3 +4,9 @@ export enum SlotStatus {
     COMPLETED = 'COMPLETED',
     CANCELLED = 'CANCELLED'
 }
+export enum UserRole {
+    USER = "USER",
+    ADMIN = "ADMIN"
+}
+
+export const USER_ROLE = UserRole;
