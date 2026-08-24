@@ -98,12 +98,22 @@ export default function NavBar({ initialUser }: NavbarProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const navItems = [
-    ...NAV_ITEMS,
-    ...(initialUser?.role === UserRole.ADMIN
-      ? [{ title: "Language Management", link: "/language-management", icon: LanguageIcon }]
-      : []),
-  ];
+  const navItems = initialUser
+    ? [
+        { title: "HomePage", link: "/", icon: HomeIcon },
+        { title: "About", link: "/about", icon: AboutIcon },
+        { title: "Dashboard", link: "/dashboard", icon: DashboardIcon },
+        { title: "Community", link: "/community", icon: CommunityIcon },
+        { title: "Your Collection", link: "/collection", icon: CollectionIcon },
+        { title: "Meeting History", link: "/history", icon: HistoryIcon },
+        ...(initialUser.role === UserRole.ADMIN
+          ? [{ title: "Language Management", link: "/language-management", icon: LanguageIcon }]
+          : []),
+      ]
+    : [
+        { title: "HomePage", link: "/", icon: HomeIcon },
+        { title: "About", link: "/about", icon: AboutIcon },
+      ];
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
