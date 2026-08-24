@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutService } from "@/app/services/auth/logout";
 import { SafeUser } from "@/app/types/authentication";
-import { UserRole, USER_ROLE } from "@/app/types/enum";
+import { UserRole } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
 
 function HomeIcon() {
@@ -133,19 +134,25 @@ export default function NavBar({ initialUser }: NavbarProps) {
       className={`fixed left-0 top-0 h-screen w-72 ${designTokens.colors.bg.sidebar} border-r ${designTokens.colors.border.default} z-50 flex flex-col p-6 font-sans transition-all duration-300 hidden xl:flex`}
     >
       {/* Brand Header */}
-      <div className="mb-8 flex items-center gap-3 px-2">
-        <div className="w-9 h-9 rounded-xl bg-[#82301c] flex items-center justify-center text-white font-bold text-lg shadow-md shadow-[#82301c]/20">
-          M
+      <Link href="/" className="mb-8 flex items-center gap-3 px-2 group">
+        <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-[#dfccc1] shadow-md shadow-[#82301c]/10 shrink-0 group-hover:scale-105 transition-transform duration-200">
+          <Image
+            src="/meefins-logo.png"
+            alt="MeeFins Brand Logo"
+            width={36}
+            height={36}
+            className="object-cover"
+          />
         </div>
         <div className="flex flex-col">
-          <span className={`font-bold tracking-tight text-base ${designTokens.colors.text.primary}`}>
+          <span className={`font-extrabold tracking-tight text-base ${designTokens.colors.text.primary}`}>
             MEE-FINS
           </span>
           <span className={`text-xs ${designTokens.colors.text.muted}`}>
             Language Exchange Platform
           </span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation Links */}
       <div className="flex flex-col gap-1.5 flex-grow">

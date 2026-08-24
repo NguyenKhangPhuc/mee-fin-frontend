@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { logoutService } from "@/app/services/auth/logout";
 import { SafeUser } from "@/app/types/authentication";
-import { UserRole, USER_ROLE } from "@/app/types/enum";
+import { UserRole } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
 
 function MenuIcon() {
@@ -150,14 +151,20 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
     <div className="xl:hidden w-full font-sans">
       {/* Fixed Header */}
       <header className={`sticky top-0 left-0 right-0 h-16 ${designTokens.colors.bg.sidebar}/90 backdrop-blur-md border-b ${designTokens.colors.border.default} z-40 px-4 flex items-center justify-between`}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#82301c] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#82301c]/20">
-            M
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-[#dfccc1] shadow-md shadow-[#82301c]/10 shrink-0 group-hover:scale-105 transition-transform duration-200">
+            <Image
+              src="/meefins-logo.png"
+              alt="MeeFins Brand Logo"
+              width={32}
+              height={32}
+              className="object-cover"
+            />
           </div>
-          <span className={`font-bold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
+          <span className={`font-extrabold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
             MEE-FINS
           </span>
-        </div>
+        </Link>
 
         <button
           onClick={() => setIsOpen(true)}
@@ -183,14 +190,20 @@ export default function NavbarMobile({ initialUser }: NavbarMobileProps) {
       >
         {/* Drawer Header */}
         <div className={`flex items-center justify-between mb-6 pb-4 border-b ${designTokens.colors.border.default}`}>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#82301c] flex items-center justify-center text-white font-bold text-sm shadow-md shadow-[#82301c]/20">
-              M
+          <Link href="/" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5 group">
+            <div className="relative w-8 h-8 rounded-lg overflow-hidden border border-[#dfccc1] shadow-md shadow-[#82301c]/10 shrink-0 group-hover:scale-105 transition-transform duration-200">
+              <Image
+                src="/meefins-logo.png"
+                alt="MeeFins Brand Logo"
+                width={32}
+                height={32}
+                className="object-cover"
+              />
             </div>
-            <span className={`font-bold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
+            <span className={`font-extrabold tracking-tight text-sm ${designTokens.colors.text.primary}`}>
               MEE-FINS
             </span>
-          </div>
+          </Link>
           <button
             onClick={() => setIsOpen(false)}
             aria-label="Close menu"
