@@ -4,14 +4,14 @@ import { ResponseError } from "@/app/types/error";
 import axios from "axios";
 
 const formatErrorString = (msg: any, fallback: string): string => {
-  if (typeof msg === 'string') return msg;
-  if (Array.isArray(msg)) {
-    return msg.map((m: any) => (typeof m === 'object' && m ? m.message || JSON.stringify(m) : String(m))).join('; ');
-  }
-  if (typeof msg === 'object' && msg !== null) {
-    return msg.message || JSON.stringify(msg);
-  }
-  return fallback;
+    if (typeof msg === 'string') return msg;
+    if (Array.isArray(msg)) {
+        return msg.map((m: any) => (typeof m === 'object' && m ? m.message || JSON.stringify(m) : String(m))).join('; ');
+    }
+    if (typeof msg === 'object' && msg !== null) {
+        return msg.message || JSON.stringify(msg);
+    }
+    return fallback;
 };
 
 export interface CreateUserLanguageDto {
@@ -29,6 +29,7 @@ export const createUserLanguage = async (data: CreateUserLanguageDto): Promise<{
         return { data: result.data, error: null };
     } catch (error) {
         if (axios.isAxiosError<ResponseError>(error)) {
+            console.log(error)
             return { data: null, error: formatErrorString(error.response?.data?.message, "Failed to create user language") };
         }
         return { data: null, error: "Failed to create user language" };
