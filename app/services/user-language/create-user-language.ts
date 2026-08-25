@@ -28,10 +28,12 @@ export const createUserLanguage = async (data: CreateUserLanguageDto): Promise<{
         const result = await api.post<UserLanguageUncheckedCreateInput>('/user-languages/create', data);
         return { data: result.data, error: null };
     } catch (error) {
+        console.log(error)
         if (axios.isAxiosError<ResponseError>(error)) {
-            console.log(error)
+
             return { data: null, error: formatErrorString(error.response?.data?.message, "Failed to create user language") };
         }
+
         return { data: null, error: "Failed to create user language" };
     }
 };
