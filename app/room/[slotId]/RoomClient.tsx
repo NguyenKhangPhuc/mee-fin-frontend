@@ -273,6 +273,11 @@ export default function RoomClient({
         data-lk-theme="default"
         style={{ height: "100vh" }}
       >
+        {/* Default LiveKit UI for testing */}
+        <VideoConference />
+
+        {/* Custom LiveKit UI (commented out for testing) */}
+        {/*
         <CustomLiveKitUI
           slotTitle={slotTitle}
           minutes={minutes}
@@ -288,6 +293,7 @@ export default function RoomClient({
           onLeave={handleLeaveRoom}
           onCancelCall={handleCancelCall}
         />
+        */}
       </LiveKitRoom>
 
       {/* Half-Time Language Switch Modal */}
