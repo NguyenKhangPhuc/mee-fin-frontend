@@ -239,13 +239,13 @@ export default function RoomClient({
         prev.map((c) =>
           c.id === payload.id
             ? {
-                ...c,
-                ...updated,
-                name: payload.name,
-                description: payload.description,
-                languageId: payload.languageId,
-                language: langObj || updated.language || c.language,
-              }
+              ...c,
+              ...updated,
+              name: payload.name,
+              description: payload.description,
+              languageId: payload.languageId,
+              language: langObj || updated.language || c.language,
+            }
             : c
         )
       );
@@ -274,10 +274,10 @@ export default function RoomClient({
         style={{ height: "100vh" }}
       >
         {/* Default LiveKit UI for testing */}
-        <VideoConference />
+        {/* <VideoConference /> */}
 
         {/* Custom LiveKit UI (commented out for testing) */}
-        {/*
+
         <CustomLiveKitUI
           slotTitle={slotTitle}
           minutes={minutes}
@@ -293,7 +293,7 @@ export default function RoomClient({
           onLeave={handleLeaveRoom}
           onCancelCall={handleCancelCall}
         />
-        */}
+
       </LiveKitRoom>
 
       {/* Half-Time Language Switch Modal */}
