@@ -256,10 +256,12 @@ export default function RoomClient({
     [allLanguages, setIsOpenLoader, showNotification]
   );
 
+  const memoizedToken = useMemo(() => token.token, [token.token]);
+
   return (
     <div className="h-screen w-full relative overflow-hidden bg-[#0a0a0c] font-sans">
       <LiveKitRoom
-        token={token.token}
+        token={memoizedToken}
         serverUrl={serverUrl}
         connect={true}
         video={true}

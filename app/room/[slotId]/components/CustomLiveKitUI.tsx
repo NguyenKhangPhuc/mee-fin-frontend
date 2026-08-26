@@ -60,11 +60,37 @@ export default function CustomLiveKitUI({
     useLocalParticipant();
 
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [isTogglingMic, setIsTogglingMic] = useState<boolean>(false);
+  const [isTogglingCam, setIsTogglingCam] = useState<boolean>(false);
 
   // Subscribe to all camera video tracks (with placeholder fallback when video is off)
   const trackReferences = useTracks([
     { source: Track.Source.Camera, withPlaceholder: true },
   ]);
+
+  const handleToggleMic = async () => {
+    if (isTogglingMic) return;
+    setIsTogglingMic(true);
+    try {
+      await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+    } catch (err) {
+      console.error("Error toggling microphone:", err);
+    } finally {
+      setIsTogglingMic(false);
+    }
+  };
+
+  const handleToggleCam = async () => {
+    if (isTogglingCam) return;
+    setIsTogglingCam(true);
+    try {
+      await localParticipant.setCameraEnabled(!isCameraEnabled);
+    } catch (err) {
+      console.error("Error toggling camera:", err);
+    } finally {
+      setIsTogglingCam(false);
+    }
+  };
 
   return (
     <div className="relative w-full h-full min-h-screen bg-[#0a0a0c] text-white flex flex-col justify-between overflow-hidden font-sans select-none">
@@ -108,6 +134,10 @@ export default function CustomLiveKitUI({
               trackRef.participant.identity ||
               (isLocal ? "You" : "Participant");
             const isMicOn = trackRef.participant.isMicrophoneEnabled;
+            const hasVideo =
+              isTrackReference(trackRef) &&
+              Boolean(trackRef.publication?.track) &&
+              !trackRef.publication?.isMuted;
 
             return (
               <div
@@ -115,7 +145,7 @@ export default function CustomLiveKitUI({
                 className="relative aspect-video w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-[#141215] border border-[#dfccc1]/20 shadow-2xl flex items-center justify-center group"
               >
                 {/* Video Track or Initial Avatar Placeholder */}
-                {isTrackReference(trackRef) && (trackRef.publication?.isSubscribed || isLocal) ? (
+                {hasVideo ? (
                   <VideoTrack
                     trackRef={trackRef}
                     className="w-full h-full object-cover"
@@ -161,8 +191,9 @@ export default function CustomLiveKitUI({
         {/* Microphone Toggle Button */}
         <button
           type="button"
-          onClick={() => localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
-          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md ${
+          onClick={handleToggleMic}
+          disabled={isTogglingMic}
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${
             isMicrophoneEnabled
               ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
               : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
@@ -189,8 +220,9 @@ export default function CustomLiveKitUI({
         {/* Camera Toggle Button */}
         <button
           type="button"
-          onClick={() => localParticipant.setCameraEnabled(!isCameraEnabled)}
-          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md ${
+          onClick={handleToggleCam}
+          disabled={isTogglingCam}
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${
             isCameraEnabled
               ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
               : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
