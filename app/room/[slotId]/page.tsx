@@ -99,7 +99,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   const provideLanguageName = slot?.provideLanguage?.name || "Provide Language";
   const exchangeLanguageName = slot?.exchangeLanguage?.name || "Exchange Language";
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "ws://localhost:7880";
+  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://livekit.meefins.online";
   const endsAt = new Date(slot.endTime).getTime();
   const durationMinutes = slot.durationMinutes || 30;
 

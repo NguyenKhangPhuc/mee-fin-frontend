@@ -13,7 +13,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   useTracks,
   useLocalParticipant,
@@ -56,12 +56,46 @@ export default function CustomLiveKitUI({
   onLeave,
   onCancelCall,
 }: CustomLiveKitUIProps) {
-  const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } =
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled, cameraTrack } =
     useLocalParticipant();
 
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   const [isTogglingMic, setIsTogglingMic] = useState<boolean>(false);
   const [isTogglingCam, setIsTogglingCam] = useState<boolean>(false);
+
+  // Auto-enable Camera and Microphone on room entry if not active
+  useEffect(() => {
+    if (!localParticipant) return;
+
+    if (!isCameraEnabled) {
+      localParticipant.setCameraEnabled(true).catch((err) => {
+        console.warn("[LiveKit UI] Auto-enable camera on room join failed:", err);
+      });
+    }
+
+    if (!isMicrophoneEnabled) {
+      localParticipant.setMicrophoneEnabled(true).catch((err) => {
+        console.warn("[LiveKit UI] Auto-enable microphone on room join failed:", err);
+      });
+    }
+  }, [localParticipant]);
+
+  // Log local participant track publication state at render time (Diagnostic Step 1 & Deliverable 2)
+  useEffect(() => {
+    if (!localParticipant) return;
+    const localVideoPubs = Array.from(localParticipant.videoTrackPublications.values());
+    console.log("[LiveKit UI] Local participant video track publications state:", {
+      isCameraEnabled,
+      videoTrackPublicationsCount: localVideoPubs.length,
+      publications: localVideoPubs.map((pub) => ({
+        trackSid: pub.trackSid,
+        source: pub.source,
+        isMuted: pub.isMuted,
+        hasTrack: Boolean(pub.track),
+        readyState: pub.track?.mediaStreamTrack?.readyState,
+      })),
+    });
+  }, [localParticipant, isCameraEnabled, cameraTrack]);
 
   // Subscribe to all camera video tracks (with placeholder fallback when video is off)
   const trackReferences = useTracks([
@@ -117,7 +151,7 @@ export default function CustomLiveKitUI({
           <span className="text-neutral-400 text-[11px] hidden sm:inline">Current Language:</span>
           <span className="font-bold text-[#f5e9e2] bg-[#82301c]/40 border border-[#82301c]/60 px-2.5 py-0.5 rounded-md text-xs shadow-xs flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-[#d97757]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m-9 9a9 9 0 019-9" />
             </svg>
             {currentLanguage}
           </span>
@@ -134,10 +168,13 @@ export default function CustomLiveKitUI({
               trackRef.participant.identity ||
               (isLocal ? "You" : "Participant");
             const isMicOn = trackRef.participant.isMicrophoneEnabled;
-            const hasVideo =
-              isTrackReference(trackRef) &&
-              Boolean(trackRef.publication?.track) &&
-              !trackRef.publication?.isMuted;
+            
+            const localCamPub = isLocal ? localParticipant.getTrackPublication(Track.Source.Camera) : null;
+            const hasVideo = isLocal
+              ? isCameraEnabled && Boolean(localCamPub?.track || cameraTrack?.track)
+              : isTrackReference(trackRef) &&
+                Boolean(trackRef.publication?.track) &&
+                !trackRef.publication?.isMuted;
 
             return (
               <div
@@ -149,6 +186,7 @@ export default function CustomLiveKitUI({
                   <VideoTrack
                     trackRef={trackRef}
                     className="w-full h-full object-cover"
+                    style={{ transform: isLocal ? "scaleX(-1)" : "none" }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#1a181b] text-[#dfccc1]">
