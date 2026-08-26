@@ -182,7 +182,7 @@ export default function CustomLiveKitUI({
                 className="relative aspect-video w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-[#141215] border border-[#dfccc1]/20 shadow-2xl flex items-center justify-center group"
               >
                 {/* Video Track or Initial Avatar Placeholder */}
-                {hasVideo ? (
+                {isTrackReference(trackRef) && hasVideo ? (
                   <VideoTrack
                     trackRef={trackRef}
                     className="w-full h-full object-cover"
