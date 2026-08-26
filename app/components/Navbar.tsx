@@ -65,6 +65,22 @@ function LanguageIcon() {
   );
 }
 
+function TermsIcon() {
+  return (
+    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+function PrivacyIcon() {
+  return (
+    <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,36 +101,54 @@ interface NavbarProps {
   initialUser: SafeUser | null;
 }
 
-const NAV_ITEMS = [
-  { title: "HomePage", link: "/", icon: HomeIcon },
-  { title: "About", link: "/about", icon: AboutIcon },
-  { title: "Dashboard", link: "/dashboard", icon: DashboardIcon },
-  { title: "Community", link: "/community", icon: CommunityIcon },
-  { title: "Your Collection", link: "/collection", icon: CollectionIcon },
-  { title: "Meeting History", link: "/history", icon: HistoryIcon },
-];
+interface NavGroup {
+  title: string;
+  items: { title: string; link: string; icon: React.ComponentType }[];
+}
+
+const getNavGroups = (user: SafeUser | null): NavGroup[] => {
+  const groups: NavGroup[] = [
+    {
+      title: "General",
+      items: [
+        { title: "HomePage", link: "/", icon: HomeIcon },
+        { title: "About", link: "/about", icon: AboutIcon },
+        { title: "Terms & Conditions", link: "/terms-and-conditions", icon: TermsIcon },
+        { title: "Privacy Policy", link: "/privacy-policy", icon: PrivacyIcon },
+      ],
+    },
+  ];
+
+  if (user) {
+    groups.push({
+      title: "Learning & Practice",
+      items: [
+        { title: "Dashboard", link: "/dashboard", icon: DashboardIcon },
+        { title: "Community", link: "/community", icon: CommunityIcon },
+        { title: "Your Collection", link: "/collection", icon: CollectionIcon },
+        { title: "Meeting History", link: "/history", icon: HistoryIcon },
+      ],
+    });
+
+    if (user.role === UserRole.ADMIN) {
+      groups.push({
+        title: "Admin",
+        items: [
+          { title: "Language Management", link: "/language-management", icon: LanguageIcon },
+        ],
+      });
+    }
+  }
+
+  return groups;
+};
 
 export default function NavBar({ initialUser }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const navItems = initialUser
-    ? [
-        { title: "HomePage", link: "/", icon: HomeIcon },
-        { title: "About", link: "/about", icon: AboutIcon },
-        { title: "Dashboard", link: "/dashboard", icon: DashboardIcon },
-        { title: "Community", link: "/community", icon: CommunityIcon },
-        { title: "Your Collection", link: "/collection", icon: CollectionIcon },
-        { title: "Meeting History", link: "/history", icon: HistoryIcon },
-        ...(initialUser.role === UserRole.ADMIN
-          ? [{ title: "Language Management", link: "/language-management", icon: LanguageIcon }]
-          : []),
-      ]
-    : [
-        { title: "HomePage", link: "/", icon: HomeIcon },
-        { title: "About", link: "/about", icon: AboutIcon },
-      ];
+  const navGroups = getNavGroups(initialUser);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -155,27 +189,31 @@ export default function NavBar({ initialUser }: NavbarProps) {
       </Link>
 
       {/* Navigation Links */}
-      <div className="flex flex-col gap-1.5 flex-grow">
-        <div className={`text-xs font-semibold uppercase tracking-wider mb-2 px-3 ${designTokens.colors.text.muted}`}>
-          Navigation
-        </div>
-        {navItems.map((item) => {
-          const isActive = pathname === item.link;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.link}
-              href={item.link}
-              className={`flex items-center gap-3.5 px-3.5 py-2.5 ${designTokens.radii.navItem} transition-all text-sm font-medium ${isActive
-                ? designTokens.colors.bg.navActive
-                : designTokens.colors.bg.navInactive
-                }`}
-            >
-              <Icon />
-              <span>{item.title}</span>
-            </Link>
-          );
-        })}
+      <div className="flex flex-col gap-6 flex-grow overflow-y-auto pr-1">
+        {navGroups.map((group) => (
+          <div key={group.title} className="flex flex-col gap-1.5">
+            <div className={`text-xs font-semibold uppercase tracking-wider mb-1 px-3 ${designTokens.colors.text.muted}`}>
+              {group.title}
+            </div>
+            {group.items.map((item) => {
+              const isActive = pathname === item.link;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.link}
+                  href={item.link}
+                  className={`flex items-center gap-3.5 px-3.5 py-2.5 ${designTokens.radii.navItem} transition-all text-sm font-medium ${isActive
+                    ? designTokens.colors.bg.navActive
+                    : designTokens.colors.bg.navInactive
+                    }`}
+                >
+                  <Icon />
+                  <span>{item.title}</span>
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* User Info & Auth Actions */}

@@ -24,6 +24,11 @@ export const metadata: Metadata = {
   title: "MeeFins - Peer-to-Peer Language Exchange & Slot Booking",
   description:
     "Faster way to learn a new language. Book 1-on-1 language exchange slots with one click, join real-time video rooms, store custom vocabulary decks, and rate learning partners.",
+  icons: {
+    icon: "/meefins-logo-48x48.png",
+    shortcut: "/meefins-logo-48x48.png",
+    apple: "/meefins-logo-48x48.png",
+  },
   keywords: [
     "Language Exchange",
     "Slot Booking",
