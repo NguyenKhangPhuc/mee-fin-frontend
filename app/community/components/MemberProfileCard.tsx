@@ -3,6 +3,7 @@
  * Displays the selected community member's profile summary card and received ratings list.
  * Includes member avatar, name, age, email, rating_avg stats, academic details grid,
  * bio description, and a client-side paginated list of ratings received (showing displayName, star rating, and feedback).
+ * Ratings list is hidden by default and toggled via "View ratings and feedback" button.
  * Wrapped in React.memo for high performance.
  *
  * CONTEXT/PARENT FILE:
@@ -31,8 +32,7 @@ interface MemberProfileCardProps {
  * BEHAVIORAL MECHANISM:
  * Renders the profile header card with avatar, average rating badge (rating_avg), social links,
  * academic info grid, and description.
- * Beneath the profile header, renders a client-side paginated list of ratingsReceived,
- * supporting star-rating filtering (5, 4, 3, 2, 1) and chronological sorting (Newest/Oldest).
+ * Includes a toggle button "View ratings and feedback" that expands/collapses the ratings list.
  *
  * PARAMETERS:
  * - props (MemberProfileCardProps): Selected member profile object.
@@ -50,6 +50,9 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
     [profile.ratingsReceived]
   );
 
+  // Toggle state for Ratings & Feedback list (default: hidden)
+  const [showRatings, setShowRatings] = useState<boolean>(false);
+
   // Filter & Sort State for Ratings Received
   const [starFilter, setStarFilter] = useState<string>("ALL");
   const [sortOrder, setSortOrder] = useState<"NEWEST" | "OLDEST">("NEWEST");
@@ -63,6 +66,7 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
     setRatingsPage(1);
     setStarFilter("ALL");
     setSortOrder("NEWEST");
+    setShowRatings(false);
   }, [profile.id]);
 
   const filteredAndSortedRatings = useMemo(() => {
@@ -229,131 +233,149 @@ const MemberProfileCard = memo(function MemberProfileCard({ profile }: MemberPro
             </p>
           </div>
         )}
+
+        {/* Toggle Button to View/Hide Ratings and Feedback */}
+        <div className="pt-2">
+          <button
+            onClick={() => setShowRatings((prev) => !prev)}
+            className="w-full py-3 px-4 rounded-xl bg-[#f8ede6] hover:bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1] text-xs font-bold transition-all flex items-center justify-center gap-2.5 shadow-xs cursor-pointer"
+          >
+            <span>{showRatings ? "Hide ratings and feedback" : "View the ratings and feedback"}</span>
+            <span className="px-2 py-0.5 rounded-full bg-[#82301c] text-white text-[10px] font-extrabold">
+              {ratingsReceived.length}
+            </span>
+          </button>
+        </div>
       </motion.div>
 
-      {/* Ratings Received List Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.1, ease: "easeOut" }}
-        className={`p-6 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-4`}
-      >
-        {/* Section Header with Select Filters */}
-        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-3`}>
-          <div className="flex items-center gap-2">
-            <h3 className={`text-base font-bold ${designTokens.colors.text.primary}`}>
-              Received Ratings & Reviews
-            </h3>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
-              {filteredAndSortedRatings.length}
-            </span>
-          </div>
+      {/* Ratings Received List Section (Collapsible) */}
+      <AnimatePresence>
+        {showRatings && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className={`p-6 ${designTokens.colors.bg.card} ${designTokens.shadows.card} ${designTokens.radii.card} border ${designTokens.colors.border.default} flex flex-col gap-4 overflow-hidden`}
+          >
+            {/* Section Header with Select Filters */}
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-3`}>
+              <div className="flex items-center gap-2">
+                <h3 className={`text-base font-bold ${designTokens.colors.text.primary}`}>
+                  Received Ratings & Reviews
+                </h3>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#f5e9e2] text-[#82301c] border border-[#dfccc1]">
+                  {filteredAndSortedRatings.length}
+                </span>
+              </div>
 
-          {/* Select Dropdown Controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Star Filter Select */}
-            <select
-              value={starFilter}
-              onChange={handleStarFilterChange}
-              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
-            >
-              <option value="ALL">All Stars</option>
-              <option value="5">★ 5 Stars</option>
-              <option value="4">★ 4 Stars</option>
-              <option value="3">★ 3 Stars</option>
-              <option value="2">★ 2 Stars</option>
-              <option value="1">★ 1 Star</option>
-            </select>
+              {/* Select Dropdown Controls */}
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Star Filter Select */}
+                <select
+                  value={starFilter}
+                  onChange={handleStarFilterChange}
+                  className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
+                >
+                  <option value="ALL">All Stars</option>
+                  <option value="5">★ 5 Stars</option>
+                  <option value="4">★ 4 Stars</option>
+                  <option value="3">★ 3 Stars</option>
+                  <option value="2">★ 2 Stars</option>
+                  <option value="1">★ 1 Star</option>
+                </select>
 
-            {/* Sort Order Select */}
-            <select
-              value={sortOrder}
-              onChange={handleSortOrderChange}
-              className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
-            >
-              <option value="NEWEST">Newest First</option>
-              <option value="OLDEST">Oldest First</option>
-            </select>
-          </div>
-        </div>
-
-        {filteredAndSortedRatings.length === 0 ? (
-          <div className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]">
-            <p className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
-              {starFilter !== "ALL"
-                ? `No ${starFilter}-star ratings found for this member.`
-                : "No ratings received yet for this member."}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              <AnimatePresence mode="wait">
-                {currentPaginatedRatings.map((ratingItem, idx) => {
-                  const raterDisplayName =
-                    ratingItem.displayName ||
-                    "Anonymous User";
-                  const createdDateStr = ratingItem.createdAt
-                    ? new Date(ratingItem.createdAt).toLocaleDateString([], {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                    : "";
-
-                  return (
-                    <motion.div
-                      key={ratingItem.id || idx}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -6 }}
-                      transition={{ duration: 0.2 }}
-                      className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-[#82301c]">
-                            {raterDisplayName}
-                          </span>
-                          <div className="flex items-center text-[#d97757] text-xs">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <span key={star}>
-                                {star <= (ratingItem.rating || 0) ? "★" : "☆"}
-                              </span>
-                            ))}
-                          </div>
-                          <span className="text-xs font-bold text-[#82301c]">
-                            ({ratingItem.rating}/5)
-                          </span>
-                        </div>
-
-                        {createdDateStr && (
-                          <span className={`text-[11px] ${designTokens.colors.text.muted} font-medium`}>
-                            {createdDateStr}
-                          </span>
-                        )}
-                      </div>
-
-                      {ratingItem.feedback && (
-                        <p className={`text-xs ${designTokens.colors.text.secondary} italic pl-1`}>
-                          &quot;{ratingItem.feedback}&quot;
-                        </p>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                {/* Sort Order Select */}
+                <select
+                  value={sortOrder}
+                  onChange={handleSortOrderChange}
+                  className={`text-xs font-medium px-2.5 py-1.5 rounded-lg ${designTokens.colors.bg.input} border ${designTokens.colors.border.default} ${designTokens.colors.text.primary} focus:outline-none focus:border-[#82301c] cursor-pointer`}
+                >
+                  <option value="NEWEST">Newest First</option>
+                  <option value="OLDEST">Oldest First</option>
+                </select>
+              </div>
             </div>
 
-            {/* Client-Side Pagination Controls for Ratings Received */}
-            <Pagination
-              currentPage={ratingsPage}
-              totalPages={totalRatingsPages}
-              onPageChange={(p) => setRatingsPage(p)}
-            />
-          </div>
+            {filteredAndSortedRatings.length === 0 ? (
+              <div className="p-6 text-center border border-dashed border-[#dfccc1] rounded-xl bg-[#fffdfb]">
+                <p className={`text-xs ${designTokens.colors.text.muted} font-medium`}>
+                  {starFilter !== "ALL"
+                    ? `No ${starFilter}-star ratings found for this member.`
+                    : "No ratings received yet for this member."}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <AnimatePresence mode="wait">
+                    {currentPaginatedRatings.map((ratingItem, idx) => {
+                      const raterDisplayName =
+                        ratingItem.displayName ||
+                        "Anonymous User";
+                      const createdDateStr = ratingItem.createdAt
+                        ? new Date(ratingItem.createdAt).toLocaleDateString([], {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                        : "";
+
+                      return (
+                        <motion.div
+                          key={ratingItem.id || idx}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.2 }}
+                          className="p-4 rounded-xl bg-[#fffdfb] border border-[#dfccc1] flex flex-col gap-2 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-[#82301c]">
+                                {raterDisplayName}
+                              </span>
+                              <div className="flex items-center text-[#d97757] text-xs">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <span key={star}>
+                                    {star <= (ratingItem.rating || 0) ? "★" : "☆"}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="text-xs font-bold text-[#82301c]">
+                                ({ratingItem.rating}/5)
+                              </span>
+                            </div>
+
+                            {createdDateStr && (
+                              <span className={`text-[11px] ${designTokens.colors.text.muted} font-medium`}>
+                                {createdDateStr}
+                              </span>
+                            )}
+                          </div>
+
+                          {ratingItem.feedback && (
+                            <p className={`text-xs ${designTokens.colors.text.secondary} italic pl-1`}>
+                              &quot;{ratingItem.feedback}&quot;
+                            </p>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+
+                {/* Client-Side Pagination Controls for Ratings Received */}
+                <Pagination
+                  currentPage={ratingsPage}
+                  totalPages={totalRatingsPages}
+                  onPageChange={(p) => setRatingsPage(p)}
+                />
+              </div>
+            )}
+          </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
     </div>
   );
 });

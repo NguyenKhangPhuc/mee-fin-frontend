@@ -26,11 +26,10 @@ import { getAllUserProfileWithLanguagesAndSlots, PaginationMeta } from "@/app/se
 import { useNotification } from "@/app/context/NotificationContext";
 import { useLoader } from "@/app/context/LoaderContext";
 
-import { buildEventsForProfile } from "./components/helpers";
 import CommunityHeader from "./components/CommunityHeader";
 import MembersDirectory from "./components/MembersDirectory";
 import MemberProfileCard from "./components/MemberProfileCard";
-import MemberScheduleCalendar from "./components/MemberScheduleCalendar";
+import MemberSlotsGrid from "./components/MemberSlotsGrid";
 import BookingModal from "./components/BookingModal";
 
 interface CommunityClientProps {
@@ -89,10 +88,6 @@ export default function CommunityClient({
   const selectedProfile = useMemo(() => {
     return profilesList.find((p) => p.id === selectedProfileId) || profilesList[0] || null;
   }, [profilesList, selectedProfileId]);
-
-  const calendarEvents = useMemo(() => {
-    return buildEventsForProfile(selectedProfile);
-  }, [selectedProfile]);
 
   /**
    * handlePageChange
@@ -168,36 +163,30 @@ export default function CommunityClient({
   }, []);
 
   /**
-   * handleEventClick
+   * handleSlotClick
    *
    * BEHAVIORAL MECHANISM:
-   * Receives FullCalendar's event click payload. Inspects the event's extendedProps to verify
-   * if the slot is already booked. If available, sets selectedSlotToBook to display the booking confirmation modal.
+   * Receives slot card click event. Verifies if slot is already booked.
+   * If available, sets selectedSlotToBook to display the booking confirmation modal.
    *
    * PARAMETERS:
-   * - clickInfo (any): The event click payload object emitted by FullCalendar.
+   * - slot (SlotUncheckedCreateInput): The clicked slot object.
    *
    * RETURNS:
    * - void
    */
-  const handleEventClick = useCallback(
-    (clickInfo: any) => {
-      const isBooked = clickInfo.event.extendedProps?.isBooked;
-      const slotId = clickInfo.event.id;
+  const handleSlotClick = useCallback(
+    (slot: SlotUncheckedCreateInput) => {
+      const isBooked = Boolean(slot.exchangeUserId) || slot.status === ("BOOKED" as any);
 
       if (isBooked) {
         showNotification("This slot has already been booked.", "info");
         return;
       }
 
-      if (!selectedProfile || !selectedProfile.provideSlots) return;
-
-      const slot = selectedProfile.provideSlots.find((s) => s.id === slotId);
-      if (slot) {
-        setSelectedSlotToBook(slot);
-      }
+      setSelectedSlotToBook(slot);
     },
-    [selectedProfile, showNotification]
+    [showNotification]
   );
 
   /**
@@ -298,17 +287,17 @@ export default function CommunityClient({
               onPageChange={handlePageChange}
             />
 
-            {/* Selected User Details & Schedule Calendar Column (Right) */}
+            {/* Selected User Details & Slots Grid Column (Right) */}
             {selectedProfile && (
               <div className="lg:col-span-8 flex flex-col gap-6">
-                {/* Profile Card & Ratings Received List */}
+                {/* Profile Card & Collapsible Ratings Received List */}
                 <MemberProfileCard profile={selectedProfile} />
 
-                {/* Member Schedule Calendar */}
-                <MemberScheduleCalendar
+                {/* Member Slots Grid (Chronological ascending order, filterable by All/Today/Tomorrow/Custom Date) */}
+                <MemberSlotsGrid
                   memberName={selectedProfile.fullName || "member"}
-                  events={calendarEvents}
-                  onEventClick={handleEventClick}
+                  slots={selectedProfile.provideSlots}
+                  onSlotClick={handleSlotClick}
                 />
               </div>
             )}

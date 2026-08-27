@@ -18,6 +18,7 @@ export interface CreateUserLanguageDto {
     userId: string;
     languageId: string;
     proficiency: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+    timezone?: string;
 }
 
 export const createUserLanguage = async (data: CreateUserLanguageDto): Promise<{

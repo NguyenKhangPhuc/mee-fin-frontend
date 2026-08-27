@@ -212,10 +212,12 @@ export default function UserDashboardClient({
       if (!profile) return;
 
       setIsOpenLoader(true);
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const { data: created, error } = await createUserLanguage({
         userId: profile.id,
         languageId: langId,
         proficiency,
+        timezone: userTimezone,
       });
       setIsOpenLoader(false);
 
