@@ -517,6 +517,7 @@ export default function UserDashboardClient({
       {/* Slot Details Modal */}
       <SlotDetailModal
         detail={selectedSlotDetail}
+        allLanguages={allLanguages}
         isLoading={isOpenLoader}
         onClose={handleCloseDetailModal}
         onDelete={handleDeleteProvidedSlot}

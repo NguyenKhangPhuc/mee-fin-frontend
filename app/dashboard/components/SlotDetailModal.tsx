@@ -11,7 +11,7 @@
 
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { SlotUncheckedCreateInput } from "@/app/types";
+import { LanguageUncheckedCreateInput, SlotUncheckedCreateInput } from "@/app/types";
 import { SlotStatus } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
 import { getStatusBadgeStyle, checkIsMeetingAvailable, parseUtcDate } from "./helpers";
@@ -22,6 +22,7 @@ interface SlotDetailModalProps {
     isOwner: boolean;
     status: SlotStatus;
   } | null;
+  allLanguages?: LanguageUncheckedCreateInput[];
   isLoading: boolean;
   onClose: () => void;
   onDelete: () => Promise<void>;
@@ -30,11 +31,23 @@ interface SlotDetailModalProps {
 
 const SlotDetailModal = memo(function SlotDetailModal({
   detail,
+  allLanguages = [],
   isLoading,
   onClose,
   onDelete,
   onGoToMeeting,
 }: SlotDetailModalProps) {
+  const provideName =
+    detail?.slot.provideLanguage?.name ||
+    allLanguages.find((l) => l.id === detail?.slot.provideLanguageId)?.name ||
+    "Not specified";
+
+  const exchangeName =
+    detail?.slot.exchangeLanguage?.name ||
+    allLanguages.find((l) => l.id === detail?.slot.exchangeLanguageId)?.name ||
+    "Not specified";
+
+  console.log(detail)
   return (
     <AnimatePresence>
       {detail && (
@@ -86,11 +99,10 @@ const SlotDetailModal = memo(function SlotDetailModal({
                   My Role
                 </span>
                 <span
-                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${
-                    detail.isOwner
+                  className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${detail.isOwner
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : "bg-sky-50 text-sky-700 border-sky-200"
-                  }`}
+                    }`}
                 >
                   {detail.isOwner ? "Host / Owner (Provided)" : "Participant (Exchanged)"}
                 </span>
@@ -143,6 +155,24 @@ const SlotDetailModal = memo(function SlotDetailModal({
                 </span>
                 <span className="text-xs font-bold text-neutral-800">
                   {detail.slot.durationMinutes} mins
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 border-t border-neutral-200/60 pt-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
+                  Provided Language (Host)
+                </span>
+                <span className="text-xs font-bold text-emerald-700">
+                  {provideName}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                <span className={`text-xs font-semibold ${designTokens.colors.text.muted}`}>
+                  Exchange Language (Wanted)
+                </span>
+                <span className="text-xs font-bold text-sky-700">
+                  {exchangeName}
                 </span>
               </div>
 
