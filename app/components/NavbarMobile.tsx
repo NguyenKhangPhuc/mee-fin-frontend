@@ -150,6 +150,7 @@ const getNavGroups = (user: SafeUser | null): NavGroup[] => {
       groups.push({
         title: "Admin",
         items: [
+          { title: "Users Management", link: "/users-management", icon: CommunityIcon },
           { title: "Language Management", link: "/language-management", icon: LanguageIcon },
         ],
       });

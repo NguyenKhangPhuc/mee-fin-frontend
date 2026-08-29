@@ -1,4 +1,5 @@
 import { UserRole } from "./enum";
+import { ProfileUncheckedCreateInput } from "./profile";
 
 export type SafeUser = {
   id: string;
@@ -7,7 +8,8 @@ export type SafeUser = {
   confirmationAt: Date | string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
-  role: UserRole
+  role: UserRole;
+  profile?: ProfileUncheckedCreateInput | null;
 };
 
 export interface LoginDto {
