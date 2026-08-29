@@ -1,39 +1,98 @@
 /**
  * PURPOSE:
  * Custom LiveKit chat component powered by the useChat() hook.
- * Provides real-time messaging over LiveKit's Data Channel, formatted timestamps,
- * sender identity badges, and clean #82301c theme styling.
- *
- * CONTEXT/PARENT FILE:
- * Rendered inside CustomLiveKitUI.tsx.
+ * Features:
+ * - Scrolls to the bottom ONLY ONCE when the chat window opens.
+ * - Aligns local user messages on the RIGHT (#82301c terracotta bubble) and remote messages on the LEFT.
+ * - Loads chat history from localStorage on initial render (useState initialValue) and persists new messages per slotId.
  */
 
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { useChat } from "@livekit/components-react";
+import { useChat, useLocalParticipant } from "@livekit/components-react";
+
+export interface SavedChatMessage {
+  id: string;
+  senderName: string;
+  senderIdentity: string;
+  isLocal: boolean;
+  message: string;
+  timestamp: number;
+}
 
 interface CustomChatProps {
+  slotId?: string;
   onClose?: () => void;
 }
 
-export default function CustomChat({ onClose }: CustomChatProps) {
-  // The useChat hook manages the array of chat messages and the async send function
+export default function CustomChat({ slotId, onClose }: CustomChatProps) {
   const { chatMessages, send, isSending } = useChat();
-  const [messageText, setMessageText] = useState<string>("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { localParticipant } = useLocalParticipant();
 
-  // Automatically scroll to the latest message whenever new messages arrive
+  const [messageText, setMessageText] = useState<string>("");
+  // Lazy initialValue for useState: load chat history from localStorage once on reload
+  const [savedMessages, setSavedMessages] = useState<SavedChatMessage[]>(() => {
+    if (typeof window === "undefined" || !slotId) return [];
+    try {
+      const saved = localStorage.getItem(`meefins_chat_${slotId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Failed to load chat history from localStorage:", err);
+      return [];
+    }
+  });
+
+  // Merge live chatMessages into savedMessages and persist to localStorage
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+    if (!chatMessages || chatMessages.length === 0) return;
+
+    const newItems: SavedChatMessage[] = chatMessages.map((msg) => {
+      const isLocal =
+        msg.from?.isLocal ||
+        (Boolean(localParticipant?.identity) &&
+          msg.from?.identity === localParticipant?.identity);
+
+      return {
+        id: msg.id || String(msg.timestamp),
+        senderName: msg.from?.name || msg.from?.identity || (isLocal ? "You" : "Participant"),
+        senderIdentity: msg.from?.identity || "",
+        isLocal: Boolean(isLocal),
+        message: msg.message,
+        timestamp: msg.timestamp,
+      };
+    });
+
+    setSavedMessages((prev) => {
+      const existingIds = new Set(prev.map((m) => m.id));
+      const merged = [...prev];
+      let updated = false;
+
+      newItems.forEach((item) => {
+        if (!existingIds.has(item.id)) {
+          merged.push(item);
+          existingIds.add(item.id);
+          updated = true;
+        }
+      });
+
+      if (updated && slotId && typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`meefins_chat_${slotId}`, JSON.stringify(merged));
+        } catch (err) {
+          console.error("Failed to save chat history to localStorage:", err);
+        }
+      }
+
+      return updated ? merged : prev;
+    });
+  }, [chatMessages, localParticipant, slotId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!messageText.trim()) return;
 
     try {
-      // Dispatch message payload across the active LiveKit Data Channel
       await send(messageText.trim());
       setMessageText("");
     } catch (err) {
@@ -48,7 +107,7 @@ export default function CustomChat({ onClose }: CustomChatProps) {
         <div className="flex items-center gap-2 text-xs font-bold text-[#f5e9e2]">
           <span>Room Chat</span>
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#82301c] text-white border border-[#82301c]/40">
-            {chatMessages.length}
+            {savedMessages.length}
           </span>
         </div>
 
@@ -66,7 +125,7 @@ export default function CustomChat({ onClose }: CustomChatProps) {
 
       {/* Message List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-        {chatMessages.length === 0 ? (
+        {savedMessages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center p-4 text-neutral-400">
             <p className="text-xs font-semibold text-[#f5e9e2]">No messages yet</p>
             <p className="text-[10px] text-neutral-400 mt-1 max-w-[200px] leading-relaxed">
@@ -74,33 +133,48 @@ export default function CustomChat({ onClose }: CustomChatProps) {
             </p>
           </div>
         ) : (
-          chatMessages.map((msg) => {
-            const senderName =
-              msg.from?.name || msg.from?.identity || "System";
+          savedMessages.map((msg) => {
+            const isLocal = msg.isLocal;
             const timeStr = new Date(msg.timestamp).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             });
 
             return (
-              <div key={msg.id || msg.timestamp} className="flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-2 px-1">
+              <div
+                key={msg.id}
+                className={`flex flex-col gap-1 w-full ${
+                  isLocal ? "items-end" : "items-start"
+                }`}
+              >
+                {/* Sender Header */}
+                <div
+                  className={`flex items-center gap-2 px-1 max-w-[85%] ${
+                    isLocal ? "flex-row-reverse text-right" : "flex-row text-left"
+                  }`}
+                >
                   <span className="text-[11px] font-bold text-[#d97757] truncate">
-                    {senderName}
+                    {msg.senderName} {isLocal ? "(You)" : ""}
                   </span>
                   <span className="text-[9px] text-neutral-400 font-mono shrink-0">
                     {timeStr}
                   </span>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-[#1a181b] border border-[#dfccc1]/20 text-xs text-[#f8ede6] leading-relaxed break-words shadow-xs">
+                {/* Message Bubble */}
+                <div
+                  className={`p-2.5 max-w-[85%] text-xs leading-relaxed break-words shadow-xs ${
+                    isLocal
+                      ? "bg-[#82301c] text-white rounded-2xl rounded-tr-xs border border-[#82301c]/80"
+                      : "bg-[#1a181b] text-[#f8ede6] rounded-2xl rounded-tl-xs border border-[#dfccc1]/20"
+                  }`}
+                >
                   {msg.message}
                 </div>
               </div>
             );
           })
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input Form */}
@@ -115,7 +189,7 @@ export default function CustomChat({ onClose }: CustomChatProps) {
         <button
           type="submit"
           disabled={isSending || !messageText.trim()}
-          className="px-4 py-2 bg-[#82301c] hover:bg-[#6c2716] disabled:opacity-40 text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-md shadow-[#82301c]/30"
+          className="px-4 py-2 bg-[#82301c] hover:bg-[#6c2716] disabled:opacity-40 text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-[#82301c]/30"
         >
           Send
         </button>

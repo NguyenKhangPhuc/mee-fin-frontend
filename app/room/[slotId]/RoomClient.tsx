@@ -279,6 +279,7 @@ export default function RoomClient({
         {/* Custom LiveKit UI (commented out for testing) */}
 
         <CustomLiveKitUI
+          slotId={slotId}
           slotTitle={slotTitle}
           minutes={minutes}
           seconds={seconds}

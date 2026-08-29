@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import CustomChat from "./CustomChat";
 
 interface CustomLiveKitUIProps {
+  slotId: string;
   slotTitle?: string;
   minutes: number;
   seconds: number;
@@ -42,6 +43,7 @@ interface CustomLiveKitUIProps {
 }
 
 export default function CustomLiveKitUI({
+  slotId,
   slotTitle,
   minutes,
   seconds,
@@ -380,7 +382,7 @@ export default function CustomLiveKitUI({
             transition={{ duration: 0.2 }}
             className="absolute top-20 right-4 bottom-24 z-[45] w-80 sm:w-96"
           >
-            <CustomChat onClose={() => setIsChatOpen(false)} />
+            <CustomChat slotId={slotId} onClose={() => setIsChatOpen(false)} />
           </motion.div>
         )}
       </AnimatePresence>
