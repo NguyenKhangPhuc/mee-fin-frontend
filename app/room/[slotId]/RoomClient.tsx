@@ -57,6 +57,8 @@ interface RoomClientProps {
   durationMinutes: number;
   provideLanguageName: string;
   exchangeLanguageName: string;
+  provideLanguageLogoUrl?: string;
+  exchangeLanguageLogoUrl?: string;
   initialCollections?: VocabularyCollectionUncheckedCreateInput[];
   allLanguages?: LanguageUncheckedCreateInput[];
   currentUser?: SafeUser | null;
@@ -78,6 +80,8 @@ export default function RoomClient({
   durationMinutes,
   provideLanguageName,
   exchangeLanguageName,
+  provideLanguageLogoUrl,
+  exchangeLanguageLogoUrl,
   initialCollections = [],
   allLanguages = [],
   currentUser,
@@ -144,6 +148,10 @@ export default function RoomClient({
   }, [isFirstHalf, exchangeLanguageName, showNotification]);
 
   const currentLanguage = isFirstHalf ? provideLanguageName : exchangeLanguageName;
+  const currentLanguageLogoUrl = isFirstHalf
+    ? (provideLanguageLogoUrl || allLanguages.find(l => l.name.toLowerCase() === provideLanguageName.toLowerCase())?.logoUrl)
+    : (exchangeLanguageLogoUrl || allLanguages.find(l => l.name.toLowerCase() === exchangeLanguageName.toLowerCase())?.logoUrl);
+
   const progressPercent = Math.min(100, Math.max(0, (elapsedMs / totalDurationMs) * 100));
 
   const handleCancelCall = () => {
@@ -284,6 +292,7 @@ export default function RoomClient({
           minutes={minutes}
           seconds={seconds}
           currentLanguage={currentLanguage}
+          currentLanguageLogoUrl={currentLanguageLogoUrl}
           isFirstHalf={isFirstHalf}
           provideLanguageName={provideLanguageName}
           exchangeLanguageName={exchangeLanguageName}

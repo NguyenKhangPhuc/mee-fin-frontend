@@ -99,6 +99,13 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   const provideLanguageName = slot?.provideLanguage?.name || "Provide Language";
   const exchangeLanguageName = slot?.exchangeLanguage?.name || "Exchange Language";
+  const provideLanguageLogoUrl =
+    slot?.provideLanguage?.logoUrl ||
+    languages?.find((l) => l.name === provideLanguageName || l.id === slot?.provideLanguageId)?.logoUrl;
+  const exchangeLanguageLogoUrl =
+    slot?.exchangeLanguage?.logoUrl ||
+    languages?.find((l) => l.name === exchangeLanguageName || l.id === slot?.exchangeLanguageId)?.logoUrl;
+
   const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || "wss://livekit.meefins.online";
   const endsAt = new Date(slot.endTime).getTime();
   const durationMinutes = slot.durationMinutes || 30;
@@ -113,6 +120,8 @@ export default async function RoomPage({ params }: RoomPageProps) {
       durationMinutes={durationMinutes}
       provideLanguageName={provideLanguageName}
       exchangeLanguageName={exchangeLanguageName}
+      provideLanguageLogoUrl={provideLanguageLogoUrl}
+      exchangeLanguageLogoUrl={exchangeLanguageLogoUrl}
       initialCollections={collections || []}
       allLanguages={languages || []}
       currentUser={currentUser || null}

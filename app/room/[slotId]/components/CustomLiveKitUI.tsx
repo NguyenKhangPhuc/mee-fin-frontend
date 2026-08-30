@@ -14,6 +14,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   useTracks,
   useLocalParticipant,
@@ -31,6 +32,7 @@ interface CustomLiveKitUIProps {
   minutes: number;
   seconds: number;
   currentLanguage: string;
+  currentLanguageLogoUrl?: string;
   isFirstHalf: boolean;
   provideLanguageName: string;
   exchangeLanguageName: string;
@@ -48,6 +50,7 @@ export default function CustomLiveKitUI({
   minutes,
   seconds,
   currentLanguage,
+  currentLanguageLogoUrl,
   isFirstHalf,
   provideLanguageName,
   exchangeLanguageName,
@@ -167,11 +170,24 @@ export default function CustomLiveKitUI({
         {/* Current Language Use */}
         <div className="flex items-center gap-2">
           <span className="text-neutral-400 text-[11px] hidden sm:inline">Current Language:</span>
-          <span className="font-bold text-[#f5e9e2] bg-[#82301c]/40 border border-[#82301c]/60 px-2.5 py-0.5 rounded-md text-xs shadow-xs flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5 text-[#d97757]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m-9 9a9 9 0 019-9" />
-            </svg>
-            {currentLanguage}
+          <span className="font-bold text-[#f5e9e2] bg-[#82301c]/40 border border-[#82301c]/60 px-2.5 py-1 rounded-lg text-xs shadow-xs flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md bg-[#82301c]/60 border border-[#dfccc1]/30 overflow-hidden shrink-0 flex items-center justify-center">
+              {currentLanguageLogoUrl ? (
+                <Image
+                  src={currentLanguageLogoUrl}
+                  alt={currentLanguage}
+                  width={20}
+                  height={20}
+                  unoptimized
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <svg className="w-3.5 h-3.5 text-[#d97757]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m-9 9a9 9 0 019-9" />
+                </svg>
+              )}
+            </div>
+            <span>{currentLanguage}</span>
           </span>
         </div>
       </div>
