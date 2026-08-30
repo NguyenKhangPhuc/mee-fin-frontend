@@ -16,6 +16,7 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { LanguageUncheckedCreateInput } from "@/app/types/language";
 import { createLanguage } from "@/app/services/language/create-language";
+import { updateLanguage } from "@/app/services/language/update-language";
 import { deleteLanguage } from "@/app/services/language/delete-language";
 import { useNotification } from "@/app/context/NotificationContext";
 import { designTokens } from "@/app/constants/design-tokens";
@@ -23,26 +24,13 @@ import { designTokens } from "@/app/constants/design-tokens";
 import LanguageHeader from "./components/LanguageHeader";
 import LanguageCard from "./components/LanguageCard";
 import CreateLanguageModal from "./components/CreateLanguageModal";
+import EditLanguageModal from "./components/EditLanguageModal";
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
 
 interface LanguageManagementClientProps {
   initialLanguages: LanguageUncheckedCreateInput[];
 }
 
-/**
- * LanguageManagementClient
- *
- * BEHAVIORAL MECHANISM:
- * Serves as the central presentation and state orchestrator for the language management workflow.
- * Filters languages in real-time via memoized searchQuery evaluation.
- * Integrates service API calls for creation and deletion while displaying toast messages via useNotification.
- *
- * PARAMETERS:
- * - props (LanguageManagementClientProps): Initial languages state.
- *
- * RETURNS:
- * - JSX.Element: Complete language management interface.
- */
 export default function LanguageManagementClient({
   initialLanguages = [],
 }: LanguageManagementClientProps) {
@@ -52,6 +40,7 @@ export default function LanguageManagementClient({
   const [languages, setLanguages] = useState<LanguageUncheckedCreateInput[]>(initialLanguages);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
+  const [editingLanguage, setEditingLanguage] = useState<LanguageUncheckedCreateInput | null>(null);
   const [deletingLanguage, setDeletingLanguage] = useState<LanguageUncheckedCreateInput | null>(null);
 
   // Filter languages based on search query
@@ -63,8 +52,8 @@ export default function LanguageManagementClient({
 
   // Handle language creation
   const handleCreateLanguage = useCallback(
-    async (name: string) => {
-      const { data, error } = await createLanguage({ name });
+    async (name: string, logoUrl?: string) => {
+      const { data, error } = await createLanguage({ name, logoUrl });
       if (error || !data) {
         showNotification(error || "Failed to create language", "error");
         throw new Error(error || "Failed to create language");
@@ -72,6 +61,23 @@ export default function LanguageManagementClient({
 
       setLanguages((prev) => [data, ...prev]);
       showNotification(`Language "${data.name}" created successfully!`, "success");
+    },
+    [showNotification]
+  );
+
+  // Handle language update
+  const handleUpdateLanguage = useCallback(
+    async (id: string, name: string, logoUrl?: string) => {
+      const { data, error } = await updateLanguage({ id, name, logoUrl });
+      if (error || !data) {
+        showNotification(error || "Failed to update language", "error");
+        throw new Error(error || "Failed to update language");
+      }
+
+      setLanguages((prev) =>
+        prev.map((lang) => (lang.id === id ? { ...lang, ...data } : lang))
+      );
+      showNotification(`Language "${data.name}" updated successfully!`, "success");
     },
     [showNotification]
   );
@@ -109,6 +115,7 @@ export default function LanguageManagementClient({
             <LanguageCard
               key={language.id || language.name}
               language={language}
+              onRequestEdit={(target) => setEditingLanguage(target)}
               onRequestDelete={(target) => setDeletingLanguage(target)}
             />
           ))}
@@ -154,6 +161,13 @@ export default function LanguageManagementClient({
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateLanguage}
+      />
+
+      <EditLanguageModal
+        language={editingLanguage}
+        isOpen={Boolean(editingLanguage)}
+        onClose={() => setEditingLanguage(null)}
+        onSubmit={handleUpdateLanguage}
       />
 
       <DeleteConfirmModal

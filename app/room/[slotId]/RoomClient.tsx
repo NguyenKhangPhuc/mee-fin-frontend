@@ -302,7 +302,7 @@ export default function RoomClient({
         isOpen={isHalfTimeModalOpen}
         onConfirm={() => setIsHalfTimeModalOpen(false)}
         onDismiss={() => setIsHalfTimeModalOpen(false)}
-        title="🔄 Half-Time Reached! Switch Language Focus"
+        title="Half-Time Reached! Switch Language Focus"
         subTitle={`Phase 1 (${provideLanguageName}) is complete! Please switch your conversation focus to ${exchangeLanguageName} for the remaining half.`}
         confirmLabel={`Switch to ${exchangeLanguageName}`}
         dismissLabel="Close"
