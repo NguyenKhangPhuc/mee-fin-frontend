@@ -1,6 +1,7 @@
 /**
  * PURPOSE:
  * Renders the complete User Languages card section.
+ * Displays user language cards with square logo images and a custom available language selector with logo images beside titles.
  * Wrapped in React.memo to avoid re-renders when parent state updates.
  *
  * CONTEXT/PARENT FILE:
@@ -11,10 +12,10 @@
 "use client";
 
 import React, { useState, useMemo, memo } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { LanguageUncheckedCreateInput, UserLanguageUncheckedCreateInput } from "@/app/types";
 import { designTokens } from "@/app/constants/design-tokens";
-import { getProficiencyBadgeStyle } from "./helpers";
 
 const getProficiencyDetails = (prof: string) => {
   switch (prof) {
@@ -62,6 +63,7 @@ const UserLanguagesSection = memo(function UserLanguagesSection({
   const [selectedProficiency, setSelectedProficiency] = useState<
     "BEGINNER" | "INTERMEDIATE" | "ADVANCED"
   >("BEGINNER");
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState<boolean>(false);
 
   const unaddedLanguages = useMemo(
     () =>
@@ -71,11 +73,17 @@ const UserLanguagesSection = memo(function UserLanguagesSection({
     [allLanguages, userLangs]
   );
 
+  const selectedLangObj = useMemo(
+    () => allLanguages.find((l) => l.id === selectedAddLangId),
+    [allLanguages, selectedAddLangId]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedAddLangId) return;
     await onAddLanguage(selectedAddLangId, selectedProficiency);
     setSelectedAddLangId("");
+    setIsLangDropdownOpen(false);
   };
 
   return (
@@ -119,8 +127,20 @@ const UserLanguagesSection = memo(function UserLanguagesSection({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-[#f5e9e2] text-[#82301c] font-bold text-xs flex items-center justify-center border border-[#dfccc1]">
-                            {langObj?.name?.charAt(0) || "L"}
+                          {/* Square Logo Container */}
+                          <div className="w-8 h-8 rounded-lg bg-[#f5e9e2] text-[#82301c] font-bold text-xs flex items-center justify-center border border-[#dfccc1] shrink-0 overflow-hidden shadow-xs">
+                            {langObj?.logoUrl ? (
+                              <Image
+                                src={langObj.logoUrl}
+                                alt={langObj.name || "Language logo"}
+                                width={32}
+                                height={32}
+                                unoptimized
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>{langObj?.name?.charAt(0) || "L"}</span>
+                            )}
                           </div>
                           <span className={`font-semibold text-sm ${designTokens.colors.text.primary}`}>
                             {langObj ? langObj.name : `Language (${ul.languageId})`}
@@ -165,22 +185,92 @@ const UserLanguagesSection = memo(function UserLanguagesSection({
             Add New Language
           </h3>
 
-          <div className="flex flex-col gap-1.5">
+          {/* Select Available Language with Logo Image */}
+          <div className="flex flex-col gap-1.5 relative">
             <label className={`text-xs font-semibold ${designTokens.colors.text.secondary}`}>
               Select Available Language
             </label>
-            <select
-              value={selectedAddLangId}
-              onChange={(e) => setSelectedAddLangId(e.target.value)}
-              className={`h-11 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-sm ${designTokens.colors.bg.input} outline-none ${designTokens.colors.border.focus} transition text-[#291e1b]`}
-            >
-              <option value="">-- Choose a language --</option>
-              {unaddedLanguages.map((lang) => (
-                <option key={lang.id} value={lang.id}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
+
+            {/* Custom Select Box */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className={`w-full h-11 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-sm ${designTokens.colors.bg.input} flex items-center justify-between outline-none ${designTokens.colors.border.focus} transition text-[#291e1b] cursor-pointer bg-[#fffdfb]`}
+              >
+                {selectedLangObj ? (
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-6 h-6 rounded-md bg-[#f5e9e2] text-[#82301c] font-bold text-xs flex items-center justify-center border border-[#dfccc1] shrink-0 overflow-hidden">
+                      {selectedLangObj.logoUrl ? (
+                        <Image
+                          src={selectedLangObj.logoUrl}
+                          alt={selectedLangObj.name}
+                          width={24}
+                          height={24}
+                          unoptimized
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span>{selectedLangObj.name.charAt(0)}</span>
+                      )}
+                    </div>
+                    <span className="font-semibold text-sm">{selectedLangObj.name}</span>
+                  </div>
+                ) : (
+                  <span className="text-[#61514d]/70 text-sm">-- Choose a language --</span>
+                )}
+                <svg className={`w-4 h-4 text-[#82301c] shrink-0 transition-transform duration-200 ${isLangDropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Custom Dropdown Options List */}
+              <AnimatePresence>
+                {isLangDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute top-full left-0 right-0 mt-1 z-30 max-h-48 overflow-y-auto bg-[#fffdfb] border border-[#dfccc1] rounded-xl shadow-lg flex flex-col p-1"
+                  >
+                    {unaddedLanguages.length === 0 ? (
+                      <div className="p-3 text-xs text-[#61514d] text-center italic">No available languages left to add</div>
+                    ) : (
+                      unaddedLanguages.map((lang) => (
+                        <button
+                          key={lang.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAddLangId(lang.id || "");
+                            setIsLangDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-xs flex items-center gap-2.5 rounded-lg hover:bg-[#f8ede6] transition text-left cursor-pointer ${
+                            selectedAddLangId === lang.id ? "bg-[#f5e9e2] font-bold text-[#82301c]" : "text-[#291e1b]"
+                          }`}
+                        >
+                          <div className="w-6 h-6 rounded-md bg-[#f5e9e2] text-[#82301c] font-bold text-xs flex items-center justify-center border border-[#dfccc1] shrink-0 overflow-hidden">
+                            {lang.logoUrl ? (
+                              <Image
+                                src={lang.logoUrl}
+                                alt={lang.name}
+                                width={24}
+                                height={24}
+                                unoptimized
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>{lang.name.charAt(0)}</span>
+                            )}
+                          </div>
+                          <span className="font-semibold text-sm">{lang.name}</span>
+                        </button>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -190,7 +280,7 @@ const UserLanguagesSection = memo(function UserLanguagesSection({
             <select
               value={selectedProficiency}
               onChange={(e) => setSelectedProficiency(e.target.value as any)}
-              className={`h-11 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-sm ${designTokens.colors.bg.input} outline-none ${designTokens.colors.border.focus} transition text-[#291e1b]`}
+              className={`h-11 px-3 border ${designTokens.colors.border.default} ${designTokens.radii.input} text-sm ${designTokens.colors.bg.input} outline-none ${designTokens.colors.border.focus} transition text-[#291e1b] bg-[#fffdfb]`}
             >
               <option value="BEGINNER">BEGINNER (33%)</option>
               <option value="INTERMEDIATE">INTERMEDIATE (66%)</option>
