@@ -32,7 +32,7 @@ import {
 import { updateProfile, updateProfileImage } from "@/app/services/profile";
 import { createSlot } from "@/app/services/slots";
 import { deleteUserSlot } from "@/app/services/slots/delete-user-slot";
-import { createUserLanguage } from "@/app/services/user-language";
+import { createUserLanguage, deleteUserLanguage } from "@/app/services/user-language";
 import { designTokens } from "@/app/constants/design-tokens";
 import { useNotification } from "@/app/context/NotificationContext";
 import { useLoader } from "@/app/context/LoaderContext";
@@ -247,6 +247,29 @@ export default function UserDashboardClient({
       }
     },
     [profile, setIsOpenLoader, showNotification]
+  );
+
+  /**
+   * handleDeleteUserLanguage
+   *
+   * BEHAVIORAL MECHANISM:
+   * Sends API request to deleteUserLanguage for the specified languageId.
+   * On success, updates userLangs state immutably and displays success notification.
+   */
+  const handleDeleteUserLanguage = useCallback(
+    async (languageId: string) => {
+      setIsOpenLoader(true);
+      const { error } = await deleteUserLanguage({ languageId });
+      setIsOpenLoader(false);
+
+      if (error) {
+        showNotification(error || "Failed to delete user language.", "error");
+      } else {
+        setUserLangs((prev) => prev.filter((l) => l.languageId !== languageId));
+        showNotification("User language deleted successfully!", "success");
+      }
+    },
+    [setIsOpenLoader, showNotification]
   );
 
   /**
@@ -500,6 +523,7 @@ export default function UserDashboardClient({
             allLanguages={allLanguages}
             isLoading={isOpenLoader}
             onAddLanguage={handleAddLanguage}
+            onDeleteLanguage={handleDeleteUserLanguage}
           />
         </motion.div>
 

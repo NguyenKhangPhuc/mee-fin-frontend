@@ -5,3 +5,7 @@ export type UserLanguageUncheckedCreateInput = {
     proficiency: string
     createdAt?: Date | string
 }
+
+export interface UserLanguagesDeleteDto {
+    languageId: string;
+}
