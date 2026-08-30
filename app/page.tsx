@@ -20,6 +20,18 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { designTokens } from './constants/design-tokens';
 
+const flagsList = [
+  { name: "English", flag: "/flags/en-EN.png", code: "EN" },
+  { name: "Vietnamese", flag: "/flags/vi-VIE.png", code: "VI" },
+  { name: "Japanese", flag: "/flags/jp-JP.png", code: "JA" },
+  { name: "Korean", flag: "/flags/kr-KR.png", code: "KO" },
+  { name: "Chinese", flag: "/flags/cn-CN.png", code: "ZH" },
+  { name: "French", flag: "/flags/fr-FR.png", code: "FR" },
+  { name: "German", flag: "/flags/ge-GE.png", code: "DE" },
+  { name: "Swedish", flag: "/flags/se-SE.png", code: "SV" },
+  { name: "Finnish", flag: "/flags/fi-FI.png", code: "FI" },
+];
+
 export default function Home() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -154,6 +166,61 @@ export default function Home() {
               </div>
             </motion.div>
 
+          </section>
+
+          {/* ===== CURRENTLY PROVIDED LANGUAGES (INFINITE MARQUEE) ===== */}
+          <section className="w-full flex flex-col gap-6 py-2 overflow-hidden relative">
+            <div className="flex flex-col items-center justify-center text-center gap-2 px-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#82301c]/10 border border-[#82301c]/20 text-[#82301c] text-xs font-extrabold uppercase tracking-wider">
+                <span className="w-2 h-2 rounded-full bg-[#82301c] animate-pulse" />
+                Currently Provided Languages
+              </div>
+              <h2 className="text-xl sm:text-3xl font-extrabold text-[#82301c] tracking-tight">
+                Explore Languages Supported on MeeFins
+              </h2>
+            </div>
+
+            {/* Infinite Marquee Track Container with Gradient Edge Fades */}
+            <div className="relative w-full overflow-hidden py-3">
+              {/* Left & Right Gradient Blur Mask Overlay */}
+              <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-r from-[#f4ebe4] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 bg-gradient-to-l from-[#f4ebe4] to-transparent z-10 pointer-events-none" />
+
+              {/* Framer Motion Infinite Scrolling Track */}
+              <motion.div
+                animate={{ x: ["0%", "-50%"] }}
+                transition={{
+                  ease: "linear",
+                  duration: 22,
+                  repeat: Infinity,
+                }}
+                className="flex items-center gap-6 w-max"
+              >
+                {[...flagsList, ...flagsList, ...flagsList].map((flagItem, idx) => (
+                  <div
+                    key={`${flagItem.name}-${idx}`}
+                    className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#fcf7f3] border border-[#dfccc1] shadow-xs hover:border-[#82301c] transition-all shrink-0 group select-none hover:shadow-md"
+                  >
+                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-[#dfccc1] shrink-0 shadow-xs bg-white">
+                      <Image
+                        src={flagItem.flag}
+                        alt={flagItem.name}
+                        width={32}
+                        height={32}
+                        unoptimized
+                        className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+                      />
+                    </div>
+                    <span className="font-bold text-sm text-[#291e1b] group-hover:text-[#82301c] transition">
+                      {flagItem.name}
+                    </span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#82301c]/10 text-[#82301c] border border-[#82301c]/20 uppercase">
+                      {flagItem.code}
+                    </span>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
           </section>
 
           {/* ===== APP DETAILS & FEATURES SECTION ===== */}
