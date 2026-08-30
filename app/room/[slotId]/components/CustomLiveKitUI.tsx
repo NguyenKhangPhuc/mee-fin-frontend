@@ -99,10 +99,26 @@ export default function CustomLiveKitUI({
     });
   }, [localParticipant, isCameraEnabled, cameraTrack]);
 
-  // Subscribe to all camera video tracks (with placeholder fallback when video is off)
-  const trackReferences = useTracks([
-    { source: Track.Source.Camera, withPlaceholder: true },
-  ]);
+  // Subscribe to camera video tracks AND screen share tracks
+  const trackReferences = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false }
+  );
+
+  // Dynamic countdown timer dot color:
+  // - First 1/3 elapsed (remaining > 2/3): Green (bg-emerald-400)
+  // - Middle 1/3 (1/3 < remaining <= 2/3): Brown (bg-[#82301c])
+  // - Final 1/3 (remaining <= 1/3): Red (bg-rose-500)
+  const remainingPercent = 100 - progressPercent;
+  const timerDotColorClass =
+    remainingPercent > 66.66
+      ? "bg-emerald-400"
+      : remainingPercent > 33.33
+        ? "bg-[#82301c]"
+        : "bg-rose-500";
 
   const handleToggleMic = async () => {
     if (isTogglingMic) return;
@@ -137,7 +153,7 @@ export default function CustomLiveKitUI({
       <div className="absolute top-4 inset-x-0 mx-auto w-fit max-w-[92vw] z-[45] flex items-center justify-center gap-3 sm:gap-4 bg-[#1a181b]/90 border border-[#dfccc1]/30 backdrop-blur-xl px-5 py-2.5 rounded-full shadow-2xl text-xs font-semibold">
         {/* Remaining Time */}
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className={`w-2.5 h-2.5 rounded-full ${timerDotColorClass} animate-pulse transition-colors duration-500`} />
           <span className="font-mono text-sm font-bold text-[#f8ede6] tracking-wider">
             {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
           </span>
@@ -164,23 +180,28 @@ export default function CustomLiveKitUI({
       <main className="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 flex items-center justify-center pt-20 pb-28">
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 items-center justify-center">
           {trackReferences.map((trackRef) => {
+            const isScreenShare = trackRef.source === Track.Source.ScreenShare;
             const isLocal = trackRef.participant.isLocal;
             const displayName =
               trackRef.participant.name ||
               trackRef.participant.identity ||
               (isLocal ? "You" : "Participant");
             const isMicOn = trackRef.participant.isMicrophoneEnabled;
-            
+
             const localCamPub = isLocal ? localParticipant.getTrackPublication(Track.Source.Camera) : null;
-            const hasVideo = isLocal
-              ? isCameraEnabled && Boolean(localCamPub?.track || cameraTrack?.track)
-              : isTrackReference(trackRef) &&
-                Boolean(trackRef.publication?.track) &&
-                !trackRef.publication?.isMuted;
+            const localScreenPub = isLocal ? localParticipant.getTrackPublication(Track.Source.ScreenShare) : null;
+
+            const hasVideo = isScreenShare
+              ? (isLocal
+                ? isScreenShareEnabled && Boolean(localScreenPub?.track)
+                : isTrackReference(trackRef) && Boolean(trackRef.publication?.track) && !trackRef.publication?.isMuted)
+              : (isLocal
+                ? isCameraEnabled && Boolean(localCamPub?.track || cameraTrack?.track)
+                : isTrackReference(trackRef) && Boolean(trackRef.publication?.track) && !trackRef.publication?.isMuted);
 
             return (
               <div
-                key={trackRef.participant.sid || trackRef.publication?.trackSid || displayName}
+                key={trackRef.participant.sid || trackRef.publication?.trackSid || `${displayName}-${trackRef.source}`}
                 className="relative aspect-video w-full rounded-2xl sm:rounded-3xl overflow-hidden bg-[#141215] border border-[#dfccc1]/20 shadow-2xl flex items-center justify-center group"
               >
                 {/* Video Track or Initial Avatar Placeholder */}
@@ -188,7 +209,7 @@ export default function CustomLiveKitUI({
                   <VideoTrack
                     trackRef={trackRef}
                     className="w-full h-full object-cover"
-                    style={{ transform: isLocal ? "scaleX(-1)" : "none" }}
+                    style={{ transform: (!isScreenShare && isLocal) ? "scaleX(-1)" : "none" }}
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-[#1a181b] text-[#dfccc1]">
@@ -196,7 +217,7 @@ export default function CustomLiveKitUI({
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-xs font-semibold text-neutral-400">
-                      Video Disabled
+                      {isScreenShare ? "Screen Share Disabled" : "Video Disabled"}
                     </span>
                   </div>
                 )}
@@ -212,13 +233,15 @@ export default function CustomLiveKitUI({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
                     </svg>
                   )}
-                  <span>{displayName} {isLocal ? "(You)" : ""}</span>
+                  <span>
+                    {isScreenShare ? `🖥️ Screen Share (${displayName})` : `${displayName} ${isLocal ? "(You)" : ""}`}
+                  </span>
                 </div>
 
                 {/* Top-Right Status Indicator Badge */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-[#82301c]/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-[#82301c] text-[10px] font-bold text-white uppercase tracking-wider shadow-md">
                   <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                  <span>{isLocal ? "HOST" : "PARTICIPANT"}</span>
+                  <span>{isScreenShare ? "SCREEN" : isLocal ? "HOST" : "PARTICIPANT"}</span>
                 </div>
               </div>
             );
@@ -233,11 +256,10 @@ export default function CustomLiveKitUI({
           type="button"
           onClick={handleToggleMic}
           disabled={isTogglingMic}
-          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${
-            isMicrophoneEnabled
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${isMicrophoneEnabled
               ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
               : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
-          }`}
+            }`}
           title={isMicrophoneEnabled ? "Mute Mic" : "Unmute Mic"}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,11 +284,10 @@ export default function CustomLiveKitUI({
           type="button"
           onClick={handleToggleCam}
           disabled={isTogglingCam}
-          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${
-            isCameraEnabled
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${isCameraEnabled
               ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
               : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
-          }`}
+            }`}
           title={isCameraEnabled ? "Turn Off Camera" : "Turn On Camera"}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,9 +309,8 @@ export default function CustomLiveKitUI({
         <button
           type="button"
           onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
-          className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl hover:bg-neutral-800 transition cursor-pointer text-xs font-semibold ${
-            isScreenShareEnabled ? "text-[#d97757] bg-[#82301c]/20" : "text-neutral-300"
-          }`}
+          className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl hover:bg-neutral-800 transition cursor-pointer text-xs font-semibold ${isScreenShareEnabled ? "text-[#d97757] bg-[#82301c]/20" : "text-neutral-300"
+            }`}
           title="Share Screen"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,9 +351,8 @@ export default function CustomLiveKitUI({
         <button
           type="button"
           onClick={() => setIsChatOpen((prev) => !prev)}
-          className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl hover:bg-neutral-800 transition cursor-pointer text-xs font-semibold ${
-            isChatOpen ? "text-[#f5e9e2] bg-[#82301c]/30" : "text-neutral-300"
-          }`}
+          className={`flex flex-col items-center justify-center px-3 py-1.5 rounded-xl hover:bg-neutral-800 transition cursor-pointer text-xs font-semibold ${isChatOpen ? "text-[#f5e9e2] bg-[#82301c]/30" : "text-neutral-300"
+            }`}
           title="Live Chat"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

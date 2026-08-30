@@ -45,6 +45,7 @@ import UserLanguagesSection from "./components/UserLanguagesSection";
 import SlotCalendar from "./components/SlotCalendar";
 import CreateSlotModal from "./components/CreateSlotModal";
 import SlotDetailModal from "./components/SlotDetailModal";
+import BookedSlotsSection, { BookedSlotItem } from "./components/BookedSlotsSection";
 
 interface UserDashboardClientProps {
   profile: ProfileUncheckedCreateInput | null;
@@ -110,6 +111,23 @@ export default function UserDashboardClient({
     () => buildCalendarEvents(provideSlots, exchangeSlots),
     [provideSlots, exchangeSlots]
   );
+
+  const allBookedSlots = useMemo(() => {
+    const bookedProvide: BookedSlotItem[] = provideSlots
+      .filter((s) => s.status === SlotStatus.BOOKED)
+      .map((slot) => ({ slot, isOwner: true, status: SlotStatus.BOOKED }));
+
+    const bookedExchange: BookedSlotItem[] = exchangeSlots
+      .filter((s) => s.status === SlotStatus.BOOKED)
+      .map((slot) => ({ slot, isOwner: false, status: SlotStatus.BOOKED }));
+
+    const combined = [...bookedProvide, ...bookedExchange];
+    combined.sort(
+      (a, b) =>
+        new Date(a.slot.startTime).getTime() - new Date(b.slot.startTime).getTime()
+    );
+    return combined;
+  }, [provideSlots, exchangeSlots]);
 
   const displayAvatar = avatarPreview || profile?.publicAvatarUrl || profile?.avatarUrl;
 
@@ -482,6 +500,19 @@ export default function UserDashboardClient({
             allLanguages={allLanguages}
             isLoading={isOpenLoader}
             onAddLanguage={handleAddLanguage}
+          />
+        </motion.div>
+
+        {/* Booked Slots Grid Section (Above Calendar) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut", delay: 0.25 }}
+        >
+          <BookedSlotsSection
+            bookedSlots={allBookedSlots}
+            allLanguages={allLanguages}
+            onSelectSlot={(detail) => setSelectedSlotDetail(detail)}
           />
         </motion.div>
 
