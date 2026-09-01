@@ -54,6 +54,11 @@ export interface GithubAuthResponse {
   [key: string]: unknown;
 }
 
+export interface GoogleAuthResponse {
+  url?: string;
+  [key: string]: unknown;
+}
+
 export interface GithubCallbackParams {
   code?: string;
   state?: string;

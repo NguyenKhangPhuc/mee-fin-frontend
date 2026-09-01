@@ -15,7 +15,6 @@ export const getCurrentDBTime = async ():
         return { data: result.data, error: null }
     } catch (error) {
         if (axios.isAxiosError<ResponseError>(error)) {
-            console.log(error)
             return { data: null, error: formatErrorString(error.response?.data?.message, "Failed to get current time") };
         }
         return { data: null, error: "Failed to get current time" };

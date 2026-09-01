@@ -5,7 +5,6 @@ import NavbarMobile from "./NavbarMobile";
 
 const NavbarServer = async () => {
   const { data: user } = await getUser();
-  console.log("NavbarServer user:", user);
   return (
     <>
       <div className="xl:block hidden">

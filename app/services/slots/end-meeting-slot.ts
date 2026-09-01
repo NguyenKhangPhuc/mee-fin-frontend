@@ -5,7 +5,6 @@ import { formatErrorString } from "@/app/helpers/error-formatter";
 
 export const forceEndMeeting = async ({ slotId }: { slotId: string }):
     Promise<{ error: string | null }> => {
-    console.log(slotId)
     try {
         await api.post('/slots/end-meeting', {
             id: slotId,
@@ -13,7 +12,6 @@ export const forceEndMeeting = async ({ slotId }: { slotId: string }):
         return { error: null }
     } catch (error) {
         if (axios.isAxiosError<ResponseError>(error)) {
-            console.log(error)
             return { error: formatErrorString(error.response?.data?.message, "Failed to end the meeting slot") };
         }
         return { error: "Failed to end the meeting slot" };

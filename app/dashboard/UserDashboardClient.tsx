@@ -226,7 +226,6 @@ export default function UserDashboardClient({
    */
   const handleAddLanguage = useCallback(
     async (langId: string, proficiency: "BEGINNER" | "INTERMEDIATE" | "ADVANCED") => {
-      console.log("Calling add language", profile)
       if (!profile) return;
 
       setIsOpenLoader(true);

@@ -58,7 +58,6 @@ export default function ForgetPasswordClient() {
       showNotification("Code has been sent successfully.", "success");
       router.push(`/reset-password?email=${encodeURIComponent(formData.email)}`);
     } catch (err: unknown) {
-      console.error("Forget password error:", err);
       setServerError("Failed to send reset code. Please try again.");
     } finally {
       setIsLoading(false);
@@ -91,9 +90,8 @@ export default function ForgetPasswordClient() {
             Email
           </label>
           <div
-            className={`border ${
-              errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.email ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <EmailIcon />
             <input

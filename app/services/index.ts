@@ -73,7 +73,6 @@ api.interceptors.response.use(
 
   async (error: AxiosError): Promise<AxiosResponse> => {
     const originalRequest = error.config as CustomAxiosRequestConfig | undefined;
-    console.log(error.response?.data);
     if (!originalRequest || ((error.response?.data as ResponseError | undefined)?.code !== EXPIRED_ACCESS_TOKEN)) {
       return Promise.reject(error);
     }

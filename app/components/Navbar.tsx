@@ -8,6 +8,7 @@ import { logoutService } from "@/app/services/auth/logout";
 import { SafeUser } from "@/app/types/authentication";
 import { UserRole } from "@/app/types/enum";
 import { designTokens } from "@/app/constants/design-tokens";
+import { useNotification } from "../context/NotificationContext";
 
 function HomeIcon() {
   return (
@@ -148,7 +149,7 @@ export default function NavBar({ initialUser }: NavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
+  const { showNotification } = useNotification()
   const navGroups = getNavGroups(initialUser);
 
   const handleLogout = async () => {
@@ -158,7 +159,7 @@ export default function NavBar({ initialUser }: NavbarProps) {
       router.push("/login");
       router.refresh();
     } catch (error) {
-      console.error("Logout error:", error);
+      showNotification("Failed to logout")
     } finally {
       setIsLoggingOut(false);
     }

@@ -11,6 +11,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useChat, useLocalParticipant } from "@livekit/components-react";
+import { useNotification } from "@/app/context/NotificationContext";
 
 export interface SavedChatMessage {
   id: string;
@@ -31,6 +32,7 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
   const { localParticipant } = useLocalParticipant();
 
   const [messageText, setMessageText] = useState<string>("");
+  const { showNotification } = useNotification()
   // Lazy initialValue for useState: load chat history from localStorage once on reload
   const [savedMessages, setSavedMessages] = useState<SavedChatMessage[]>(() => {
     if (typeof window === "undefined" || !slotId) return [];
@@ -38,7 +40,7 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
       const saved = localStorage.getItem(`meefins_chat_${slotId}`);
       return saved ? JSON.parse(saved) : [];
     } catch (err) {
-      console.error("Failed to load chat history from localStorage:", err);
+      showNotification("Failed to load chat history");
       return [];
     }
   });
@@ -80,7 +82,7 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
         try {
           localStorage.setItem(`meefins_chat_${slotId}`, JSON.stringify(merged));
         } catch (err) {
-          console.error("Failed to save chat history to localStorage:", err);
+          showNotification("Failed to save chat history");
         }
       }
 
@@ -96,7 +98,7 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
       await send(messageText.trim());
       setMessageText("");
     } catch (err) {
-      console.error("Failed to send live chat message:", err);
+      showNotification("Failed to send live chat message");
     }
   };
 
@@ -143,15 +145,13 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
             return (
               <div
                 key={msg.id}
-                className={`flex flex-col gap-1 w-full ${
-                  isLocal ? "items-end" : "items-start"
-                }`}
+                className={`flex flex-col gap-1 w-full ${isLocal ? "items-end" : "items-start"
+                  }`}
               >
                 {/* Sender Header */}
                 <div
-                  className={`flex items-center gap-2 px-1 max-w-[85%] ${
-                    isLocal ? "flex-row-reverse text-right" : "flex-row text-left"
-                  }`}
+                  className={`flex items-center gap-2 px-1 max-w-[85%] ${isLocal ? "flex-row-reverse text-right" : "flex-row text-left"
+                    }`}
                 >
                   <span className="text-[11px] font-bold text-[#d97757] truncate">
                     {msg.senderName} {isLocal ? "(You)" : ""}
@@ -163,11 +163,10 @@ export default function CustomChat({ slotId, onClose }: CustomChatProps) {
 
                 {/* Message Bubble */}
                 <div
-                  className={`p-2.5 max-w-[85%] text-xs leading-relaxed break-words shadow-xs ${
-                    isLocal
-                      ? "bg-[#82301c] text-white rounded-2xl rounded-tr-xs border border-[#82301c]/80"
-                      : "bg-[#1a181b] text-[#f8ede6] rounded-2xl rounded-tl-xs border border-[#dfccc1]/20"
-                  }`}
+                  className={`p-2.5 max-w-[85%] text-xs leading-relaxed break-words shadow-xs ${isLocal
+                    ? "bg-[#82301c] text-white rounded-2xl rounded-tr-xs border border-[#82301c]/80"
+                    : "bg-[#1a181b] text-[#f8ede6] rounded-2xl rounded-tl-xs border border-[#dfccc1]/20"
+                    }`}
                 >
                   {msg.message}
                 </div>

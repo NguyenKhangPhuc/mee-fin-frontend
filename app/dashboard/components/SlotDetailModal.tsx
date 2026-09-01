@@ -47,7 +47,6 @@ const SlotDetailModal = memo(function SlotDetailModal({
     allLanguages.find((l) => l.id === detail?.slot.exchangeLanguageId)?.name ||
     "Not specified";
 
-  console.log(detail)
   return (
     <AnimatePresence>
       {detail && (
@@ -100,8 +99,8 @@ const SlotDetailModal = memo(function SlotDetailModal({
                 </span>
                 <span
                   className={`text-xs font-bold px-2.5 py-0.5 rounded-md border ${detail.isOwner
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-sky-50 text-sky-700 border-sky-200"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-sky-50 text-sky-700 border-sky-200"
                     }`}
                 >
                   {detail.isOwner ? "Host / Owner (Provided)" : "Participant (Exchanged)"}

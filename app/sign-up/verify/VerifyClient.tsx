@@ -64,7 +64,6 @@ export default function VerifyClient({ email }: VerifyClientProps) {
       showNotification("Account verified successfully!", "success");
       router.push("/login");
     } catch (err: unknown) {
-      console.error("Verification error:", err);
       setServerError("Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -86,7 +85,6 @@ export default function VerifyClient({ email }: VerifyClientProps) {
       }
       showNotification("Verification code has been resent to your email.", "success");
     } catch (err: unknown) {
-      console.error("Resend code error:", err);
       setServerError("Failed to resend verification code.");
     } finally {
       setIsResending(false);
@@ -120,9 +118,8 @@ export default function VerifyClient({ email }: VerifyClientProps) {
             Verification Code
           </label>
           <div
-            className={`border ${
-              errors.code ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.code ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <CodeIcon />
             <input

@@ -102,7 +102,6 @@ export default function ResetPasswordClient({ email }: ResetPasswordClientProps)
       showNotification("Password updated successfully!", "success");
       router.push("/login");
     } catch (err: unknown) {
-      console.error("Reset password error:", err);
       setServerError("Failed to reset password. Please try again.");
     } finally {
       setIsLoading(false);
@@ -154,9 +153,8 @@ export default function ResetPasswordClient({ email }: ResetPasswordClientProps)
             Verification Code
           </label>
           <div
-            className={`border ${
-              errors.code ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.code ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <CodeIcon />
             <input
@@ -190,9 +188,8 @@ export default function ResetPasswordClient({ email }: ResetPasswordClientProps)
             Old Password
           </label>
           <div
-            className={`border ${
-              errors.oldPassword ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.oldPassword ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <LockIcon />
             <input
@@ -225,9 +222,8 @@ export default function ResetPasswordClient({ email }: ResetPasswordClientProps)
             New Password
           </label>
           <div
-            className={`border ${
-              errors.newPassword ? designTokens.colors.border.error : designTokens.colors.border.default
-            } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
+            className={`border ${errors.newPassword ? designTokens.colors.border.error : designTokens.colors.border.default
+              } ${designTokens.radii.input} h-12 flex items-center px-3 ${designTokens.colors.border.focus} transition`}
           >
             <LockIcon />
             <input

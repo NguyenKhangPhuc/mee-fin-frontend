@@ -4,5 +4,6 @@ export * from './signup';
 export * from './refresh';
 export * from './github';
 export * from './github-callback';
+export * from './google';
 export * from './user';
 export * from './update-password';

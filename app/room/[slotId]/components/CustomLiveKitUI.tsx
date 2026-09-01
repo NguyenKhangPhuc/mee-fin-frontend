@@ -86,21 +86,21 @@ export default function CustomLiveKitUI({
   }, [localParticipant]);
 
   // Log local participant track publication state at render time (Diagnostic Step 1 & Deliverable 2)
-  useEffect(() => {
-    if (!localParticipant) return;
-    const localVideoPubs = Array.from(localParticipant.videoTrackPublications.values());
-    console.log("[LiveKit UI] Local participant video track publications state:", {
-      isCameraEnabled,
-      videoTrackPublicationsCount: localVideoPubs.length,
-      publications: localVideoPubs.map((pub) => ({
-        trackSid: pub.trackSid,
-        source: pub.source,
-        isMuted: pub.isMuted,
-        hasTrack: Boolean(pub.track),
-        readyState: pub.track?.mediaStreamTrack?.readyState,
-      })),
-    });
-  }, [localParticipant, isCameraEnabled, cameraTrack]);
+  // useEffect(() => {
+  //   if (!localParticipant) return;
+  //   const localVideoPubs = Array.from(localParticipant.videoTrackPublications.values());
+  //   console.log("[LiveKit UI] Local participant video track publications state:", {
+  //     isCameraEnabled,
+  //     videoTrackPublicationsCount: localVideoPubs.length,
+  //     publications: localVideoPubs.map((pub) => ({
+  //       trackSid: pub.trackSid,
+  //       source: pub.source,
+  //       isMuted: pub.isMuted,
+  //       hasTrack: Boolean(pub.track),
+  //       readyState: pub.track?.mediaStreamTrack?.readyState,
+  //     })),
+  //   });
+  // }, [localParticipant, isCameraEnabled, cameraTrack]);
 
   // Subscribe to camera video tracks AND screen share tracks
   const trackReferences = useTracks(
@@ -280,8 +280,8 @@ export default function CustomLiveKitUI({
           onClick={handleToggleMic}
           disabled={isTogglingMic}
           className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${isMicrophoneEnabled
-              ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
-              : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
+            ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
+            : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
             }`}
           title={isMicrophoneEnabled ? "Mute Mic" : "Unmute Mic"}
         >
@@ -308,8 +308,8 @@ export default function CustomLiveKitUI({
           onClick={handleToggleCam}
           disabled={isTogglingCam}
           className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex flex-col items-center justify-center transition cursor-pointer shadow-md disabled:opacity-50 ${isCameraEnabled
-              ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
-              : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
+            ? "bg-[#82301c] text-white hover:bg-[#6c2716] shadow-[#82301c]/30"
+            : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700"
             }`}
           title={isCameraEnabled ? "Turn Off Camera" : "Turn On Camera"}
         >

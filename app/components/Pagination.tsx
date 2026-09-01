@@ -53,7 +53,6 @@ export function getPaginationItems(
   // Always include start and end pages
   pagesSet.add(1);
   pagesSet.add(totalPages);
-  console.log("This is total page", totalPages)
   // Include current page and adjacent neighbours
   if (currentPage - 1 >= 1) pagesSet.add(currentPage - 1);
   pagesSet.add(currentPage);
@@ -108,8 +107,8 @@ const Pagination = memo(function Pagination({
         disabled={disabled || currentPage <= 1}
         onClick={() => onPageChange(currentPage - 1)}
         className={`w-8 h-8 rounded-lg border text-xs font-semibold flex items-center justify-center transition ${currentPage <= 1 || disabled
-            ? "border-neutral-200 text-neutral-300 cursor-not-allowed bg-neutral-50"
-            : `${designTokens.colors.border.default} text-neutral-600 hover:bg-neutral-100 cursor-pointer`
+          ? "border-neutral-200 text-neutral-300 cursor-not-allowed bg-neutral-50"
+          : `${designTokens.colors.border.default} text-neutral-600 hover:bg-neutral-100 cursor-pointer`
           }`}
         title="Previous Page"
       >
@@ -140,8 +139,8 @@ const Pagination = memo(function Pagination({
             disabled={disabled}
             onClick={() => onPageChange(item)}
             className={`w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center transition cursor-pointer ${isCurrent
-                ? `${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} shadow-xs`
-                : `border ${designTokens.colors.border.default} bg-white text-neutral-700 hover:bg-neutral-100`
+              ? `${designTokens.colors.bg.buttonPrimary} ${designTokens.colors.text.buttonPrimary} shadow-xs`
+              : `border ${designTokens.colors.border.default} bg-white text-neutral-700 hover:bg-neutral-100`
               }`}
           >
             {item}
@@ -157,8 +156,8 @@ const Pagination = memo(function Pagination({
         disabled={disabled || currentPage >= totalPages}
         onClick={() => onPageChange(currentPage + 1)}
         className={`w-8 h-8 rounded-lg border text-xs font-semibold flex items-center justify-center transition ${currentPage >= totalPages || disabled
-            ? "border-neutral-200 text-neutral-300 cursor-not-allowed bg-neutral-50"
-            : `${designTokens.colors.border.default} text-neutral-600 hover:bg-neutral-100 cursor-pointer`
+          ? "border-neutral-200 text-neutral-300 cursor-not-allowed bg-neutral-50"
+          : `${designTokens.colors.border.default} text-neutral-600 hover:bg-neutral-100 cursor-pointer`
           }`}
         title="Next Page"
       >
