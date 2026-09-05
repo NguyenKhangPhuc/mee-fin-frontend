@@ -58,6 +58,15 @@ const SlotCalendar = memo(function SlotCalendar({
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
+    // On mobile devices, default to 3-day view for much cleaner column spacing
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      if (calendarRef.current) {
+        calendarRef.current.getApi().changeView("timeGrid3Days");
+      }
+    }
+  }, []);
+
+  React.useEffect(() => {
     // Focus and scroll directly to current time indicator line automatically on render
     const scrollNow = () => {
       const nowLine = containerRef.current?.querySelector(".fc-now-indicator-line");
@@ -77,7 +86,7 @@ const SlotCalendar = memo(function SlotCalendar({
       {/* Section Header + Status Legend */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b ${designTokens.colors.border.default} pb-4`}>
         <div>
-          <h2 className={`text-xl font-bold ${designTokens.colors.text.primary}`}>
+          <h2 className={`text-lg sm:text-xl font-bold ${designTokens.colors.text.primary}`}>
             Manage Slots Calendar
           </h2>
           <p className={`text-xs ${designTokens.colors.text.muted}`}>
@@ -86,35 +95,42 @@ const SlotCalendar = memo(function SlotCalendar({
         </div>
 
         {/* Color Status Legend */}
-        <div className="flex flex-wrap items-center gap-3.5 text-xs font-medium">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3.5 text-[11px] sm:text-xs font-medium">
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#d97757] shadow-xs border border-[#82301c]" />
-            <span className={`font-semibold ${designTokens.colors.text.primary}`}>OPEN (Light Terracotta)</span>
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#d97757] shadow-xs border border-[#82301c]" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>OPEN</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#9a3412] shadow-xs" />
-            <span className={`font-semibold ${designTokens.colors.text.primary}`}>BOOKED (Amber Rust)</span>
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#9a3412] shadow-xs" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>BOOKED</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#5c4a44] shadow-xs" />
-            <span className={`font-semibold ${designTokens.colors.text.primary}`}>COMPLETED (Mocha)</span>
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#5c4a44] shadow-xs" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>COMPLETED</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#d6cbc6] shadow-xs border border-[#927f78]" />
-            <span className={`font-semibold ${designTokens.colors.text.primary}`}>CANCELLED (Light Clay)</span>
+            <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-[#d6cbc6] shadow-xs border border-[#927f78]" />
+            <span className={`font-semibold ${designTokens.colors.text.primary}`}>CANCELLED</span>
           </div>
         </div>
       </div>
 
-      {/* FullCalendar */}
+      {/* FullCalendar Container */}
       <div
         ref={containerRef}
-        className="calendar-container max-h-[650px] overflow-y-auto rounded-xl border border-[#dfccc1] p-3 bg-[#fffdfb] shadow-xs [&_.fc-button-primary]:!bg-[#82301c] [&_.fc-button-primary]:!border-[#6c2716] [&_.fc-button-primary:hover]:!bg-[#6c2716] [&_.fc-button-primary:disabled]:!bg-[#dfccc1] [&_.fc-toolbar-title]:!text-[#82301c] [&_.fc-toolbar-title]:!font-bold [&_.fc-col-header-cell]:!bg-[#f8ede6] [&_.fc-col-header-cell]:!text-[#82301c] [&_.fc-col-header-cell]:!py-2 [&_.fc-now-indicator-line]:!border-[#82301c] [&_.fc-now-indicator-line]:!border-2 [&_.fc-now-indicator-arrow]:!border-l-[#82301c] [&_.fc-theme-standard_td]:!border-[#dfccc1] [&_.fc-theme-standard_th]:!border-[#dfccc1] [&_.fc-theme-standard]:!border-[#dfccc1]"
+        className="calendar-container max-h-[700px] overflow-y-auto rounded-xl border border-[#dfccc1] p-1.5 sm:p-3 bg-[#fffdfb] shadow-xs [&_.fc-timegrid-slot]:!h-7 sm:[&_.fc-timegrid-slot]:!h-6 [&_.fc-toolbar]:!flex-col sm:[&_.fc-toolbar]:!flex-row [&_.fc-toolbar]:!gap-2.5 [&_.fc-toolbar]:!items-center [&_.fc-toolbar]:!justify-between [&_.fc-toolbar-chunk]:!flex [&_.fc-toolbar-chunk]:!flex-wrap [&_.fc-toolbar-chunk]:!items-center [&_.fc-toolbar-chunk]:!justify-center [&_.fc-toolbar-chunk]:!gap-1 [&_.fc-button-primary]:!bg-[#82301c] [&_.fc-button-primary]:!border-[#6c2716] [&_.fc-button-primary:hover]:!bg-[#6c2716] [&_.fc-button-primary:disabled]:!bg-[#dfccc1] [&_.fc-button]:!text-xs [&_.fc-button]:!px-2 [&_.fc-button]:!py-1 sm:[&_.fc-button]:!px-3 sm:[&_.fc-button]:!py-1.5 [&_.fc-button]:!rounded-lg [&_.fc-toolbar-title]:!text-sm sm:[&_.fc-toolbar-title]:!text-base lg:[&_.fc-toolbar-title]:!text-lg [&_.fc-toolbar-title]:!text-[#82301c] [&_.fc-toolbar-title]:!font-bold [&_.fc-col-header-cell]:!bg-[#f8ede6] [&_.fc-col-header-cell]:!text-[#82301c] [&_.fc-col-header-cell]:!py-1.5 [&_.fc-col-header-cell-cushion]:!text-xs sm:[&_.fc-col-header-cell-cushion]:!text-sm [&_.fc-col-header-cell-cushion]:!font-bold [&_.fc-timegrid-slot-label-cushion]:!text-[10px] sm:[&_.fc-timegrid-slot-label-cushion]:!text-xs [&_.fc-timegrid-slot-label-cushion]:!font-semibold [&_.fc-timegrid-slot-label-cushion]:!text-[#61514d] [&_.fc-v-event]:!min-h-[26px] [&_.fc-v-event]:!rounded-md [&_.fc-v-event]:!shadow-xs [&_.fc-event-main]:!p-1 [&_.fc-event-main]:!flex [&_.fc-event-main]:!flex-col [&_.fc-event-main]:!justify-start [&_.fc-event-title]:!text-[11px] sm:[&_.fc-event-title]:!text-xs [&_.fc-event-title]:!font-bold [&_.fc-event-title]:!leading-tight [&_.fc-event-title]:!whitespace-normal [&_.fc-event-title]:!break-words [&_.fc-event-time]:!text-[10px] sm:[&_.fc-event-time]:!text-[11px] [&_.fc-event-time]:!font-semibold [&_.fc-event-time]:!opacity-95 [&_.fc-now-indicator-line]:!border-[#82301c] [&_.fc-now-indicator-line]:!border-2 [&_.fc-now-indicator-arrow]:!border-l-[#82301c] [&_.fc-theme-standard_td]:!border-[#dfccc1] [&_.fc-theme-standard_th]:!border-[#dfccc1] [&_.fc-theme-standard]:!border-[#dfccc1]"
       >
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
+          views={{
+            timeGrid3Days: {
+              type: "timeGrid",
+              duration: { days: 3 },
+              buttonText: "3 days",
+            },
+          }}
           slotDuration="00:05:00"
           scrollTime={currentTimeString}
           scrollTimeReset={false}
@@ -123,7 +139,7 @@ const SlotCalendar = memo(function SlotCalendar({
           headerToolbar={{
             left: "prev,next today",
             center: "title",
-            right: "dayGridMonth,timeGridWeek,timeGridDay",
+            right: "dayGridMonth,timeGridWeek,timeGrid3Days,timeGridDay",
           }}
           selectable={true}
           selectMirror={false}
